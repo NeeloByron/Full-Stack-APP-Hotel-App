@@ -9,5 +9,8 @@
   "scripts": {
     "dev:web": "npm run dev -w web",
     "dev:api": "npm run dev -w api"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
   }
 }
