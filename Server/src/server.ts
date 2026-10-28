@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 4001;
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({origin: "http://localhost:5173",}));
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
