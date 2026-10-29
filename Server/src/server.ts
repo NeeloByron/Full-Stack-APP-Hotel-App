@@ -47,7 +47,12 @@ app.get("/api/database-test", async (_req, res) => {
   }
 });
 
-// this starts the express server and listens for requests.
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// starts the server only when running locally 
+if (process.env.NODE_ENV !== "production") { 
+    app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+ });
+}
+
+// export the express app so vercel can run it as a functioon
+export default app;
