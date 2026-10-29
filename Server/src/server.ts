@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 4001;
 
 app.use(helmet()); // add security-related HTTP headers
 // allow our react frontend to talk to this backend 
-app.use(cors({origin: "http://localhost:5173",}));
+app.use(cors({origin: process.env.NODE_ENV === "production" ? true : "http://localhost:5173",}));
 // allow express to understand JSON data sent in requests
 app.use(express.json());
 
