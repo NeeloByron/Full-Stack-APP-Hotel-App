@@ -1,11 +1,9 @@
-
+import Navbar from "@/components/ui/layout/Navbar"
 
 function App () {
    return (
       <>
-         <div>
-             <h1>Hotel Booking App</h1>
-         </div> 
+         <Navbar />
       </>
    )
 }
