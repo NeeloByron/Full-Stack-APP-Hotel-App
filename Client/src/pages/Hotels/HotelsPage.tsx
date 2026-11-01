@@ -62,28 +62,67 @@ const hotels = [
 function HotelsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("recommended")
+    const [priceFilters, setPriceFilters] = useState<string[]>([])
+    const [ratingFilters, setRatingFilters] = useState<number[]>([])
+
+    const toggleFilter = <T,>(
+      value: T,
+      setFilters: React.Dispatch<React.SetStateAction<T[]>>,
+    ) => {
+      setFilters((filters) =>
+        filters.includes(value)
+          ? filters.filter((filter) => filter !== value)
+          : [...filters, value],
+      )
+    }
 
     const filteredHotels = useMemo(() => {
-    const search = searchTerm.toLowerCase().trim()
+  const search = searchTerm.toLowerCase().trim()
 
-    let results = hotels.filter((hotel) => {
-     return (
-         hotel.name.toLowerCase().includes(search) ||
-         hotel.location.toLowerCase().includes(search)
-       )
-     })
+  let results = hotels.filter((hotel) => {
+    const matchesSearch =
+      hotel.name.toLowerCase().includes(search) ||
+      hotel.location.toLowerCase().includes(search)
 
-    if (sortBy === "price-low") {
-        results = [...results].sort((a, b) => a.price - b.price)}
+    const matchesPrice =
+      priceFilters.length === 0 ||
+      priceFilters.some((filter) => {
+        if (filter === "under-1500") {
+          return hotel.price < 1500
+        }
 
-    if (sortBy === "price-high") {
-        results = [...results].sort((a, b) => b.price - a.price)}
+        if (filter === "1500-2500") {
+          return hotel.price >= 1500 && hotel.price <= 2500
+        }
 
-    if (sortBy === "rating") {
-       results = [...results].sort((a, b) => b.rating - a.rating)}
+        if (filter === "2500-plus") {
+          return hotel.price > 2500
+        }
 
-     return results
-}, [searchTerm, sortBy])
+        return false
+      })
+
+    const matchesRating =
+      ratingFilters.length === 0 ||
+      ratingFilters.some((rating) => hotel.rating >= rating)
+
+    return matchesSearch && matchesPrice && matchesRating
+  })
+
+  if (sortBy === "price-low") {
+    results = [...results].sort((a, b) => a.price - b.price)
+  }
+
+  if (sortBy === "price-high") {
+    results = [...results].sort((a, b) => b.price - a.price)
+  }
+
+  if (sortBy === "rating") {
+    results = [...results].sort((a, b) => b.rating - a.rating)
+  }
+
+  return results
+}, [searchTerm, sortBy, priceFilters, ratingFilters])
     
   return (
     
@@ -124,14 +163,20 @@ function HotelsPage() {
         </div>
 
         <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
-          <HotelFilters />
+          <HotelFilters
+            priceFilters={priceFilters}
+            ratingFilters={ratingFilters}
+            onPriceChange={(value) => toggleFilter(value, setPriceFilters)}
+            onRatingChange={(value) => toggleFilter(value, setRatingFilters)}
+          />
 
           <div>
             <p className="mb-5 text-sm text-muted-foreground">{filteredHotels.length} hotels found</p>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {filteredHotels.length > 0 ? (
+             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredHotels.map((hotel) => (
-                <HotelCard
+               <HotelCard
                           key={hotel.name}
                           name={hotel.name}
                           location={hotel.location}
@@ -139,8 +184,15 @@ function HotelsPage() {
                           rating={hotel.rating}
                           image={hotel.image}
                           tag={hotel.tag} />
-              ))}
-            </div>
+                     ))}
+                  </div>
+                  ) : (
+                 <div className="rounded-xl border border-border bg-card p-10 text-center">
+                   <h2 className="text-lg font-medium text-foreground"> No hotels found </h2>
+
+                     <p className="mt-2 text-sm text-muted-foreground"> Try searching for another hotel or location </p>
+              </div>
+              )}
           </div>
         </div>
       </main>
