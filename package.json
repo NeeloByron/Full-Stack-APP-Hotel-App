@@ -1,0 +1,13 @@
+{
+  "name": "full-stack-app-hotel-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix Client\" \"npm run dev --prefix Server\"",
+    "dev:client": "npm run dev --prefix Client",
+    "dev:server": "npm run dev --prefix Server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
