@@ -1,11 +1,11 @@
 import Navbar from "@/components/ui/layout/Navbar"
-import Homepage from "@/pages/Home/HomePage"
+import AppRoutes from "@/routes/AppRoutes"
 
 function App () {
    return (
       <>
          <Navbar />
-         <Homepage />
+         <AppRoutes />
       </>
    )
 }

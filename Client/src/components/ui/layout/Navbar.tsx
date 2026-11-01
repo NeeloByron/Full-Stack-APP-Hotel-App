@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
 
 // Navbar component 
 function Navbar() {
@@ -17,19 +18,10 @@ function Navbar() {
 
          {/* Navigation links */}
         <nav className="hidden items-center gap-8 md:flex">
-          <a
-            href="/"
-            className="text-sm font-medium text-foreground transition-colors hover:text-primary"
-          >
-            Home
-          </a>
-
-          <a
-            href="/hotels"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Hotels
-          </a>
+          <Link to="/" className="text-sm font-medium text-foreground transition-colors hover:text-primary">Home</Link>
+           
+           {/* Link to the Hotels page */}
+          <Link to="/hotels" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Hotels</Link>
 
           <a
             href="/bookings"
