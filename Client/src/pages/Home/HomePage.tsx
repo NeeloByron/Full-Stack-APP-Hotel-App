@@ -1,4 +1,5 @@
 import HotelSearch from "@/components/ui/search/HotelSearch"
+import StayHighlights from "@/components/ui/home/StayHighlights"
 
 // HomePage component - Renders the main landing page of the application 
 function HomePage() {
@@ -34,6 +35,7 @@ function HomePage() {
             </div>
           </div>
         </section>
+        <StayHighlights />
       </main>
     </div>
   )
