@@ -1,20 +1,47 @@
 import { Button } from "@/components/ui/button"
 
+// Navbar component 
 function Navbar() {
   return (
-    <header className="border-b bg-background">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <h1 className="text-xl font-semibold">Hotel App</h1>
+    <header className="border-b border-border bg-card">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+        <div className="flex flex-col leading-none">
+          <span className="text-lg font-semibold tracking-tight text-foreground">
+            Stay
+          </span>
 
-        <nav className="flex items-center gap-6">
-          <a href="/" className="text-sm font-medium">Home</a>
+          <span className="mt-1 text-xs text-muted-foreground">
+            Hotel booking
+          </span>
+        </div>
 
-          <a href="/hotels" className="text-sm font-medium">Hotels</a>
+         {/* Navigation links */}
+        <nav className="hidden items-center gap-8 md:flex">
+          <a
+            href="/"
+            className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+          >
+            Home
+          </a>
 
-          <a href="/bookings" className="text-sm font-medium">My Bookings</a>
+          <a
+            href="/hotels"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          >
+            Hotels
+          </a>
 
-          <Button>Sign In</Button>
+          <a
+            href="/bookings"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          >
+            My bookings
+          </a>
         </nav>
+
+        <Button className="rounded-lg bg-primary px-5 text-primary-foreground hover:bg-primary/90">
+          Sign in
+        </Button>
       </div>
     </header>
   )
