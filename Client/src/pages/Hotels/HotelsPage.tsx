@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "
 
 const hotels = [
   {
+    id: "the-fern-house",
     name: "The Fern House",
     location: "Sandton, Johannesburg",
     price: 1850,
@@ -15,6 +16,7 @@ const hotels = [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    id: "harbour-view-hotel",
     name: "Harbour View Hotel",
     location: "Cape Town, Western Cape",
     price: 2300,
@@ -24,6 +26,7 @@ const hotels = [
       "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    id: "the-city-lodge",
     name: "The City Lodge",
     location: "Rosebank, Johannesburg",
     price: 1650,
@@ -32,6 +35,7 @@ const hotels = [
       "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    id: "ocean-house",
     name: "Ocean House",
     location: "Umhlanga, Durban",
     price: 2100,
@@ -41,6 +45,7 @@ const hotels = [
       "https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    id: "the-park-residence",
     name: "The Park Residence",
     location: "Pretoria, Gauteng",
     price: 1450,
@@ -49,6 +54,7 @@ const hotels = [
       "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    id: "mountain-view-retreat",
     name: "Mountain View Retreat",
     location: "Stellenbosch, Western Cape",
     price: 2750,
@@ -177,13 +183,14 @@ function HotelsPage() {
              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredHotels.map((hotel) => (
                <HotelCard
-                          key={hotel.name}
-                          name={hotel.name}
-                          location={hotel.location}
-                          price={hotel.price}
-                          rating={hotel.rating}
-                          image={hotel.image}
-                          tag={hotel.tag} />
+                         key={hotel.id}
+                         id={hotel.id}
+                         name={hotel.name}
+                         location={hotel.location}
+                         price={hotel.price}
+                         rating={hotel.rating}
+                         image={hotel.image}
+                         tag={hotel.tag} />
                      ))}
                   </div>
                   ) : (
