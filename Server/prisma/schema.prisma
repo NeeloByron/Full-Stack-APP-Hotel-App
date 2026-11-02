@@ -16,3 +16,48 @@ model ConnectionTest {
   message   String
   createdAt DateTime @default(now())
 }
+
+model Hotel {
+  id          Int    @id @default(autoincrement())
+  name        String
+  slug        String @unique
+  description String
+  address     String
+  city        String
+  province    String
+  country     String @default("South Africa")
+
+  starRating  Int
+  guestRating Float?
+
+  latitude  Float?
+  longitude Float?
+
+  mainImage String
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms RoomType[]
+}
+
+model RoomType {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  capacity Int
+  quantity Int
+
+  price Decimal @db.Decimal(10, 2)
+
+  image String?
+
+  hotelId Int
+  hotel   Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
