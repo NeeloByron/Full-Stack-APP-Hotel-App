@@ -3,6 +3,7 @@ import cors from "cors"; // frontend can make requests to the backend
 import helmet from "helmet"; // security-related HTTP headers
 import dotenv from "dotenv"; // .env variable can be read
 import { prisma } from "./config/prisma.js" // backend can talk to Neon PostgreSQL
+import hotelRoutes from "./routes/hotelRoutes.js"
 
 dotenv.config();
 
@@ -15,6 +16,10 @@ app.use(cors({origin: process.env.NODE_ENV === "production" ? true : "http://loc
 // allow express to understand JSON data sent in requests
 app.use(express.json());
 
+// hotel routes e.g., GET /api/hotels. GET/api/hotels/:slug
+app.use("/api/hotels", hotelRoutes)
+
+// health check route
 app.get("/api/health", (_req, res) => {
   res.status(200).json({
     success: true,

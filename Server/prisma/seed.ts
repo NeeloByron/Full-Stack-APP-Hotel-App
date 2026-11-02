@@ -11,7 +11,7 @@ const prisma = new PrismaClient({
 })
 
 async function main() {
-  await prisma.hotel.create({
+  await (prisma as any).hotel.create({
     data: {
       name: "The Fern House",
       slug: "the-fern-house",
