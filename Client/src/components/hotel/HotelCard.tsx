@@ -14,7 +14,7 @@ type HotelCardProps = {
   slug: string
 }
 
-function HotelCard({ id, name, location, price, rating, image, tag, }: HotelCardProps) {
+function HotelCard({ id, name, location, price, rating, image, tag, slug }: HotelCardProps) {
   return (
     <Card className="overflow-hidden border-border bg-card p-0">
       <div className="relative">
@@ -47,7 +47,7 @@ function HotelCard({ id, name, location, price, rating, image, tag, }: HotelCard
          <Button
                  variant="outline"
                  className="w-full"
-                 render={<Link to={`/hotels/${id}`} />} >View hotel</Button>
+                 render={<Link to={`/hotels/${slug}`} />} >View hotel</Button>
       </CardFooter>
     </Card>
   )

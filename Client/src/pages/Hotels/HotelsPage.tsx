@@ -42,7 +42,7 @@ function HotelsPage() {
                       const data = await getHotels() // GET /api/hotels
                       setHotels(data) // saves the hotels returned by the backend 
                     } catch (error) {
-                      console.error(error)
+                      console.error(error) // shows error in the browser console  
                       setError("We couldn't load the hotels.")
                     } finally {
                       setLoading(false)
@@ -69,72 +69,112 @@ function HotelsPage() {
 
   // Start by filtering all hotels
   let results = hotels.filter((hotel) => {
-    const matchesSearch =
-      hotel.name.toLowerCase().includes(search) ||
-      `${hotel.city} ${hotel.province}`.toLowerCase().includes(search)
-
-    const matchesPrice =
-      priceFilters.length === 0 ||
-      priceFilters.some((filter) => {
+    const price = getLowestRoomPrice(hotel) // finds the cheapest room at this hotel
+    const matchesSearch = hotel.name.toLowerCase().includes(search) || `${hotel.city} ${hotel.province}`.toLowerCase().includes(search)
+    // check whether hotel name OR location matches the search  
+    const matchesPrice = priceFilters.length === 0 || priceFilters.some((filter) => {
         if (filter === "under-1500") {
-          return hotel.price < 1500
+          return price < 1500
         }
 
         if (filter === "1500-2500") {
-          return hotel.price >= 1500 && hotel.price <= 2500
+          return price >= 1500 && price <= 2500
         }
 
         if (filter === "2500-plus") {
-          return hotel.price > 2500
+          return price > 2500
         }
 
         return false
       })
 
-    const matchesRating =
-      ratingFilters.length === 0 ||
-      ratingFilters.some((rating) => hotel.rating >= rating)
+   // check whether the hotel matches the selected rating filters
+   const matchesRating = ratingFilters.length === 0 || ratingFilters.some((rating) => hotel.guestRating ?? 0 >= rating)
 
+   // only keep hotel that match: search + price + rating
     return matchesSearch && matchesPrice && matchesRating
   })
 
+  // sort hotels from cheapest to most expensive 
   if (sortBy === "price-low") {
-    results = [...results].sort((a, b) => a.price - b.price)
+    results = [...results].sort((a, b) => getLowestRoomPrice(a) - getLowestRoomPrice(b))
   }
 
+  // sort hotels from most expensive to cheapest
   if (sortBy === "price-high") {
-    results = [...results].sort((a, b) => b.price - a.price)
+    results = [...results].sort((a, b) => getLowestRoomPrice(b) - getLowestRoomPrice(a))
   }
 
+  // sort hotels from highest guest rating to lowest
   if (sortBy === "rating") {
-    results = [...results].sort((a, b) => b.rating - a.rating)
+    results = [...results].sort((a, b) => (b.guestRating ?? 0) - (a.guestRating ?? 0))
   }
 
+  // return the final filtered and sorted hotel list
   return results
-}, [searchTerm, sortBy, priceFilters, ratingFilters])
+  // recalculate whenever any of these values change
+}, [hotels, searchTerm, sortBy, priceFilters, ratingFilters]) // recal
     
+// Show this while waiting for the backend
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-7xl px-6 py-16">
+        <p className="text-sm text-muted-foreground">Loading hotels...</p>
+      </main>
+    )
+  }
+
+
+  // Show this if fetching hotels failed
+  if (error) {
+    return (
+      <main className="mx-auto max-w-7xl px-6 py-16">
+        <div className="rounded-xl border border-border bg-card p-8">
+          <h1 className="text-lg font-medium text-foreground">Unable to load hotels</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+        </div>
+      </main>
+    )
+  }
+
+  // Hotels page
   return (
     
-    <div className="min-h-screen bg-background">
-
+     <div className="min-h-screen bg-background">
       <main className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
+
+        {/* Page heading */}
         <div className="mb-10">
+
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Explore stays</p>
 
           <h1 className="text-4xl font-medium tracking-[-0.03em] text-foreground">Find your next hotel.</h1>
 
           <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">Browse hotels and compare locations, prices and ratings.</p>
+
         </div>
 
+
+        {/* Search + sorting section */}
         <div className="mb-8 flex flex-col gap-4 border-b border-border pb-8 md:flex-row md:items-center md:justify-between">
+
+          {/* Search input */}
           <Input
                 type="search"
                 placeholder="Search by hotel or location..."
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                className="max-w-md" />
+                onChange={(event) =>
+                setSearchTerm(event.target.value)
+            }
+            className="max-w-md"/>
 
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value ?? "recommended")}>
+
+          {/* Sorting dropdown */}
+          <Select
+                  value={sortBy}
+                  onValueChange={(value) =>
+                  setSortBy(value ?? "recommended") }>
+
             <SelectTrigger className="w-full md:w-[190px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -149,40 +189,57 @@ function HotelsPage() {
               <SelectItem value="rating">Highest rated</SelectItem>
             </SelectContent>
           </Select>
+
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
-          <HotelFilters
-            priceFilters={priceFilters}
-            ratingFilters={ratingFilters}
-            onPriceChange={(value) => toggleFilter(value, setPriceFilters)}
-            onRatingChange={(value) => toggleFilter(value, setRatingFilters)}
-          />
 
+        {/* Filters on the left + hotel cards on the right */}
+        <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
+
+          {/* Hotel filters */}
+          <HotelFilters
+                       priceFilters={priceFilters}
+                       ratingFilters={ratingFilters}
+                       onPriceChange={(value) =>
+                     toggleFilter(value, setPriceFilters)
+                 }
+            onRatingChange={(value) =>
+              toggleFilter(value, setRatingFilters)} />
+
+
+          {/* Hotel results */}
           <div>
+
+            {/* Number of hotels found */}
             <p className="mb-5 text-sm text-muted-foreground">{filteredHotels.length} hotels found</p>
 
-            {filteredHotels.length > 0 ? (
-             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filteredHotels.map((hotel) => (
-               <HotelCard
-                         key={hotel.id}
-                         id={hotel.id}
-                         name={hotel.name}
-                         location={hotel.location}
-                         price={hotel.price}
-                         rating={hotel.rating}
-                         image={hotel.image}
-                         tag={hotel.tag} />
-                     ))}
-                  </div>
-                  ) : (
-                 <div className="rounded-xl border border-border bg-card p-10 text-center">
-                   <h2 className="text-lg font-medium text-foreground"> No hotels found </h2>
 
-                     <p className="mt-2 text-sm text-muted-foreground"> Try searching for another hotel or location </p>
+            {/* If hotels were found, display them */}
+            {filteredHotels.length > 0 ? (
+
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+                {filteredHotels.map((hotel) => (
+
+                  <HotelCard
+                            key={hotel.id} 
+                            id={hotel.slug}  // Slug is used for the hotel details URL
+                            slug={hotel.slug}
+                            name={hotel.name}  // Hotel name from Neon
+                            location={`${hotel.city}, ${hotel.province}`} // Combine city and province into one location
+                            price={getLowestRoomPrice(hotel)} // Display the cheapest available room price
+                            rating={hotel.guestRating ?? 0} // If guestRating is null, use 0
+                            image={hotel.mainImage} // Hotel image stored in Neon
+                  />
+                ))}
               </div>
-              )}
+              ) : (
+              // Show this if filters/search return no hotels
+              <div className="rounded-xl border border-border bg-card p-10 text-center">
+                <h2 className="text-lg font-medium text-foreground">No hotels found</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Try searching for another hotel or location</p>
+              </div>
+             )}
           </div>
         </div>
       </main>
