@@ -11,6 +11,7 @@ type HotelCardProps = {
   rating: number
   image: string
   tag?: string
+  slug: string
 }
 
 function HotelCard({ id, name, location, price, rating, image, tag, }: HotelCardProps) {
