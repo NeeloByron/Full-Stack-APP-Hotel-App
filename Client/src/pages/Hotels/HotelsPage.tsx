@@ -1,76 +1,57 @@
-import { useMemo, useState } from "react"
+// react hooks 
+// useEffect = run code when the page loads
+// useMemo = calculate/filter data efficiently
+// useState = store values that can change
+import { useEffect, useMemo, useState } from "react" 
 import HotelCard from "@/components/hotel/HotelCard"
 import HotelFilters from "@/components/hotel/HotelFilters"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select"
+import { getHotels, type Hotel, } from "@/services/hotelService" // service used to fetch hotels from our backend API
 
-const hotels = [
-  {
-    id: "the-fern-house",
-    name: "The Fern House",
-    location: "Sandton, Johannesburg",
-    price: 1850,
-    rating: 4.9,
-    tag: "Popular",
-    image:
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "harbour-view-hotel",
-    name: "Harbour View Hotel",
-    location: "Cape Town, Western Cape",
-    price: 2300,
-    rating: 4.8,
-    tag: "Sea view",
-    image:
-      "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "the-city-lodge",
-    name: "The City Lodge",
-    location: "Rosebank, Johannesburg",
-    price: 1650,
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "ocean-house",
-    name: "Ocean House",
-    location: "Umhlanga, Durban",
-    price: 2100,
-    rating: 4.8,
-    tag: "Beachfront",
-    image:
-      "https://images.unsplash.com/photo-1455587734955-081b22074882?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "the-park-residence",
-    name: "The Park Residence",
-    location: "Pretoria, Gauteng",
-    price: 1450,
-    rating: 4.6,
-    image:
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "mountain-view-retreat",
-    name: "Mountain View Retreat",
-    location: "Stellenbosch, Western Cape",
-    price: 2750,
-    rating: 4.9,
-    tag: "Top rated",
-    image:
-      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
-  },
-]
+// finds the cheapest room price for a hotel 
+function getLowestRoomPrice(hotel: Hotel) {
+  // If the hotel has no rooms, return 0
+  if (hotel.rooms.length === 0) {
+    return 0
+  }
+
+  // Convert room prices into numbers and find the smallest one
+  return Math.min(
+    ...hotel.rooms.map((room) => Number(room.price))
+  )
+}
 
 function HotelsPage() {
-    const [searchTerm, setSearchTerm] = useState("")
-    const [sortBy, setSortBy] = useState("recommended")
-    const [priceFilters, setPriceFilters] = useState<string[]>([])
-    const [ratingFilters, setRatingFilters] = useState<number[]>([])
+    const [hotels, setHotels] = useState<Hotel[]>([]) // stores all hotels that come from our backend/neon database
+    const [loading, setLoading] = useState(true)  // Keeps track of whether hotel data is still loading
+    const [error, setError] = useState("") // Stores an error message if the API request fails 
 
+    const [searchTerm, setSearchTerm] = useState("") // Stores what the user types in the search box
+    const [sortBy, setSortBy] = useState("recommended") // Stores which sorting option the user selected
+    const [priceFilters, setPriceFilters] = useState<string[]>([]) // Stores selected price filters
+    const [ratingFilters, setRatingFilters] = useState<number[]>([]) // Stores selected rating filters
+
+    // Runs once when HotelsPage first loads
+    useEffect(() => {
+              async function loadHotels() {
+                try {
+                      setLoading(true) // Tell the page that loading has started
+                      setError("") // Remove any old error 
+
+                      const data = await getHotels() // GET /api/hotels
+                      setHotels(data) // saves the hotels returned by the backend 
+                    } catch (error) {
+                      console.error(error)
+                      setError("We couldn't load the hotels.")
+                    } finally {
+                      setLoading(false)
+                    }
+                  }
+                   loadHotels()
+              }, [])
+
+    // selecting/unselecting filters
     const toggleFilter = <T,>(
       value: T,
       setFilters: React.Dispatch<React.SetStateAction<T[]>>,
@@ -82,13 +63,15 @@ function HotelsPage() {
       )
     }
 
-    const filteredHotels = useMemo(() => {
-  const search = searchTerm.toLowerCase().trim()
+    // filters and sorts the hotels
+  const filteredHotels = useMemo(() => {
+  const search = searchTerm.toLowerCase().trim() // Makes search lowercase so searches are easier to match
 
+  // Start by filtering all hotels
   let results = hotels.filter((hotel) => {
     const matchesSearch =
       hotel.name.toLowerCase().includes(search) ||
-      hotel.location.toLowerCase().includes(search)
+      `${hotel.city} ${hotel.province}`.toLowerCase().includes(search)
 
     const matchesPrice =
       priceFilters.length === 0 ||
