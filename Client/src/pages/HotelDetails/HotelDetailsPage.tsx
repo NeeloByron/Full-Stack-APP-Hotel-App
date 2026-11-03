@@ -2,11 +2,16 @@ import { useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card"
 import { useGetHotelBySlugQuery } from "@/services/hotelApi"
+import { useNavigate } from "react-router-dom"
+import { useAppDispatch } from "@/app/hooks"
+import { setHotelSlug, setRoomType, } from "@/features/booking/bookingSlice"
 
 
 function HotelDetailsPage() {
   const { slug } = useParams<{ slug: string }>() // reads the hotel slug from the URL
   const { data: hotel, isLoading, isError, } = useGetHotelBySlugQuery(slug ?? "") // RTK Query automatically fetches: GET
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
 
   return (
     <main className="min-h-screen bg-background">
@@ -78,7 +83,17 @@ function HotelDetailsPage() {
                               <p className="mt-2 text-lg font-semibold text-foreground">R{Number(room.price).toLocaleString("en-ZA",)}{" "}/ night</p>
                             </div>
 
-                            <Button>Choose room</Button>
+                            <Button
+                                    onClick={() => {
+                                     // Save selected hotel in Redux
+                                    dispatch(setHotelSlug(hotel.slug))
+
+                                    // Save selected room type in Redux
+                                    dispatch(setRoomType(room.id))
+
+                                   // Go to booking page
+                                   navigate("/booking")
+                                    }}> Choose room</Button>
                           </div>
                         </CardContent>
                       </Card>
