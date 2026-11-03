@@ -5,10 +5,54 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id Int @id @default(autoincrement())
+
+  // The hotel being booked.
+  hotelId Int
+
+  // The selected room type.
+  roomTypeId Int
+
+  // Booking dates.
+  checkIn  DateTime
+  checkOut DateTime
+
+  // Number of guests and rooms selected.
+  guests Int
+  rooms  Int
+
+  // We save the prices at booking time.
+  // This is important because hotel prices may change later.
+  nightlyPrice Decimal @db.Decimal(10, 2)
+  totalPrice   Decimal @db.Decimal(10, 2)
+
+  status BookingStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships.
+  hotel    Hotel    @relation(fields: [hotelId], references: [id])
+  roomType RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@index([hotelId])
+  @@index([roomTypeId])
+  @@index([checkIn, checkOut])
 }
 
 model ConnectionTest {
@@ -40,13 +84,14 @@ model Hotel {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  rooms RoomType[]
+  rooms    RoomType[]
+  bookings Booking[]
 }
 
 model RoomType {
-  id          Int     @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   name        String
-  description String?
+  description String
 
   capacity Int
   quantity Int
@@ -60,4 +105,6 @@ model RoomType {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  bookings Booking[]
 }
