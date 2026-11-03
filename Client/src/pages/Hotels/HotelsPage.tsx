@@ -2,12 +2,12 @@
 // useEffect = run code when the page loads
 // useMemo = calculate/filter data efficiently
 // useState = store values that can change
-import { useEffect, useMemo, useState } from "react" 
+import { useMemo, useState } from "react" 
 import HotelCard from "@/components/hotel/HotelCard"
 import HotelFilters from "@/components/hotel/HotelFilters"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select"
-import { getHotels, type Hotel, } from "@/services/hotelService" // service used to fetch hotels from our backend API
+import { useGetHotelsQuery, type Hotel, } from "@/services/hotelApi"
 
 // finds the cheapest room price for a hotel 
 function getLowestRoomPrice(hotel: Hotel) {
@@ -16,42 +16,22 @@ function getLowestRoomPrice(hotel: Hotel) {
     return 0
   }
 
-  // Convert room prices into numbers and find the smallest one
+  // Convert room prices into numbers and return the cheapest price
   return Math.min(
     ...hotel.rooms.map((room) => Number(room.price))
   )
 }
 
 function HotelsPage() {
-    const [hotels, setHotels] = useState<Hotel[]>([]) // stores all hotels that come from our backend/neon database
-    const [loading, setLoading] = useState(true)  // Keeps track of whether hotel data is still loading
-    const [error, setError] = useState("") // Stores an error message if the API request fails 
+    // RTK query automatically - fetches GET /api/hotels - stores the returned data, handles loading state, handles error state & caches the hotel data 
+    const { data: hotels = [], isLoading, isError,} = useGetHotelsQuery()
 
     const [searchTerm, setSearchTerm] = useState("") // Stores what the user types in the search box
     const [sortBy, setSortBy] = useState("recommended") // Stores which sorting option the user selected
     const [priceFilters, setPriceFilters] = useState<string[]>([]) // Stores selected price filters
     const [ratingFilters, setRatingFilters] = useState<number[]>([]) // Stores selected rating filters
 
-    // Runs once when HotelsPage first loads
-    useEffect(() => {
-              async function loadHotels() {
-                try {
-                      setLoading(true) // Tell the page that loading has started
-                      setError("") // Remove any old error 
-
-                      const data = await getHotels() // GET /api/hotels
-                      setHotels(data) // saves the hotels returned by the backend 
-                    } catch (error) {
-                      console.error(error) // shows error in the browser console  
-                      setError("We couldn't load the hotels.")
-                    } finally {
-                      setLoading(false)
-                    }
-                  }
-                   loadHotels()
-              }, [])
-
-    // selecting/unselecting filters
+    // adds or removes a selected filters
     const toggleFilter = <T,>(
       value: T,
       setFilters: React.Dispatch<React.SetStateAction<T[]>>,
@@ -89,9 +69,9 @@ function HotelsPage() {
       })
 
    // check whether the hotel matches the selected rating filters
-   const matchesRating = ratingFilters.length === 0 || ratingFilters.some((rating) => hotel.guestRating ?? 0 >= rating)
+   const matchesRating = ratingFilters.length === 0 || ratingFilters.some((rating) => (hotel.guestRating ?? 0) >= rating)
 
-   // only keep hotel that match: search + price + rating
+   // Hotel must match all selected filters
     return matchesSearch && matchesPrice && matchesRating
   })
 
@@ -116,7 +96,7 @@ function HotelsPage() {
 }, [hotels, searchTerm, sortBy, priceFilters, ratingFilters]) // recal
     
 // Show this while waiting for the backend
-  if (loading) {
+  if (isLoading) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-16">
         <p className="text-sm text-muted-foreground">Loading hotels...</p>
@@ -126,12 +106,12 @@ function HotelsPage() {
 
 
   // Show this if fetching hotels failed
-  if (error) {
+  if (isError) {
     return (
       <main className="mx-auto max-w-7xl px-6 py-16">
         <div className="rounded-xl border border-border bg-card p-8">
           <h1 className="text-lg font-medium text-foreground">Unable to load hotels</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+          <p className="mt-2 text-sm text-muted-foreground">We couldn't load the hotels</p>
         </div>
       </main>
     )
@@ -223,7 +203,6 @@ function HotelsPage() {
 
                   <HotelCard
                             key={hotel.id} 
-                            id={hotel.slug}  // Slug is used for the hotel details URL
                             slug={hotel.slug}
                             name={hotel.name}  // Hotel name from Neon
                             location={`${hotel.city}, ${hotel.province}`} // Combine city and province into one location

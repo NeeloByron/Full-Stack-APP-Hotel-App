@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter, } from "@/components/ui/card"
 import { Link } from "react-router-dom"
 
 type HotelCardProps = {
-  id: string
   name: string
   location: string
   price: number
@@ -14,7 +13,7 @@ type HotelCardProps = {
   slug: string
 }
 
-function HotelCard({ id, name, location, price, rating, image, tag, slug }: HotelCardProps) {
+function HotelCard({ name, location, price, rating, image, tag, slug }: HotelCardProps) {
   return (
     <Card className="overflow-hidden border-border bg-card p-0">
       <div className="relative">
