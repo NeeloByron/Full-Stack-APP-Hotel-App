@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, } from "@/components/ui/card"
+import { Link } from "react-router-dom"
 
 type HotelCardProps = {
   name: string
@@ -9,16 +10,10 @@ type HotelCardProps = {
   rating: number
   image: string
   tag?: string
+  slug: string
 }
 
-function HotelCard({
-  name,
-  location,
-  price,
-  rating,
-  image,
-  tag,
-}: HotelCardProps) {
+function HotelCard({ name, location, price, rating, image, tag, slug }: HotelCardProps) {
   return (
     <Card className="overflow-hidden border-border bg-card p-0">
       <div className="relative">
@@ -42,14 +37,16 @@ function HotelCard({
           <p className="text-sm text-muted-foreground"> ★ {rating} </p>
 
           <p className="text-sm text-foreground">
-            <span className="font-semibold"> R{price} </span>{" "}
-            / night
+            <span className="font-semibold"> R{price} </span>{" "} / night
           </p>
         </div>
       </CardContent>
 
       <CardFooter className="p-5 pt-0">
-        <Button variant="outline" className="w-full"> View hotel </Button>
+         <Button
+                 variant="outline"
+                 className="w-full"
+                 render={<Link to={`/hotels/${slug}`} />} >View hotel</Button>
       </CardFooter>
     </Card>
   )

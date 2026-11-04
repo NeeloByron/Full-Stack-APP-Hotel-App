@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id Int @id @default(autoincrement())
+
+  // The hotel being booked.
+  hotelId Int
+
+  // The selected room type.
+  roomTypeId Int
+
+  // Booking dates.
+  checkIn  DateTime
+  checkOut DateTime
+
+  // Number of guests and rooms selected.
+  guests Int
+  rooms  Int
+
+  // We save the prices at booking time.
+  // This is important because hotel prices may change later.
+  nightlyPrice Decimal @db.Decimal(10, 2)
+  totalPrice   Decimal @db.Decimal(10, 2)
+
+  status BookingStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships.
+  hotel    Hotel    @relation(fields: [hotelId], references: [id])
+  roomType RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@index([hotelId])
+  @@index([roomTypeId])
+  @@index([checkIn, checkOut])
+}
+
+model ConnectionTest {
+  id        Int      @id @default(autoincrement())
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Hotel {
+  id          Int    @id @default(autoincrement())
+  name        String
+  slug        String @unique
+  description String
+  address     String
+  city        String
+  province    String
+  country     String @default("South Africa")
+
+  starRating  Int
+  guestRating Float?
+
+  latitude  Float?
+  longitude Float?
+
+  mainImage String
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms    RoomType[]
+  bookings Booking[]
+}
+
+model RoomType {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+
+  capacity Int
+  quantity Int
+
+  price Decimal @db.Decimal(10, 2)
+
+  image String?
+
+  hotelId Int
+  hotel   Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+}

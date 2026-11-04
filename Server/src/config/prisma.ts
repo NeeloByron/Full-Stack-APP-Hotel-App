@@ -1,5 +1,5 @@
 import "dotenv/config"; // variables from .env
-import { PrismaClient } from "@prisma/client"; // Prisma client
+import { PrismaClient } from "../../generated/prisma/client.js" // Prisma client
 import { PrismaPg } from "@prisma/adapter-pg"; // PostgreSQL Primsa 
 
 // The postgreSQl adapter, it uses DATABASE_URL from .env to connect Prisma to Neon PostgreSQL database
