@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card"
 import { useGetHotelBySlugQuery } from "@/services/hotelApi"
 import { useNavigate } from "react-router-dom"
 import { useAppDispatch } from "@/app/hooks"
-import { setHotelSlug, setRoomType, } from "@/features/booking/bookingSlice"
+import { setHotelSlug, setRoomType, } from "@/features/bookings/bookingSlice"
 
 
 function HotelDetailsPage() {

@@ -1,10 +1,11 @@
 import { useMemo } from "react"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import { setCheckIn, setCheckOut, setGuests, setRooms, } from "@/features/booking/bookingSlice"
+import { setCheckIn, setCheckOut, setGuests, setRooms, } from "@/features/bookings/bookingSlice"
 import { useGetHotelBySlugQuery } from "@/services/hotelApi"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { useCreateBookingMutation } from "@/features/bookings/bookingApi"
 
 
 function BookingPage() {
@@ -17,10 +18,14 @@ function BookingPage() {
   const { data: hotel, isLoading, isError,} = useGetHotelBySlugQuery(
     booking.hotelSlug ?? "",
     {
-      // Do not make the API request if no hotel was selected
-      skip: !booking.hotelSlug,
-    }
-  )
+        // Do not make the API request if no hotel was selected
+        skip: !booking.hotelSlug,
+     }
+   )
+
+    const [ createBooking, { 
+                               isLoading: isCreatingBooking, 
+                               error: createBookingError, },] = useCreateBookingMutation()
 
     // Find the room selected on HotelDetailsPage
      const selectedRoom = hotel?.rooms.find(
@@ -48,9 +53,9 @@ function BookingPage() {
         ? numberOfNights
         : 0
       }, [
-      booking.checkIn,
-      booking.checkOut,
-  ])
+           booking.checkIn,
+           booking.checkOut,
+         ])
 
     const nightlyPrice = selectedRoom ? Number(selectedRoom.price) : 0 // Convert Prisma Decimal/string room price into a number
     const totalPrice = nights * nightlyPrice *booking.rooms // Final booking total 
@@ -97,6 +102,34 @@ function BookingPage() {
       </main>
     )
   }
+
+  async function handleCreateBooking() {
+  // Make sure all required booking information exists.
+  if (!hotel || !selectedRoom || !booking.checkIn || !booking.checkOut
+  ) {
+    return
+  }
+
+  try {
+    // Send the booking information to the backend.
+    const result = await createBooking({
+      hotelId: hotel.id,
+      roomTypeId: selectedRoom.id,
+
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+
+      guests: booking.guests,
+      rooms: booking.rooms,
+    }).unwrap()
+
+    console.log("Booking created:", result.data)
+    alert(`Booking #${result.data.id} created successfully.`,)
+  } catch (error) {
+    console.error("Booking failed:", error)
+  }
+}
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-6 py-12">
@@ -269,7 +302,12 @@ function BookingPage() {
                   <p className="mt-1 text-2xl font-semibold">R{totalPrice.toLocaleString("en-ZA")}</p>
                 </div>
 
-                <Button className="w-full" disabled={!bookingIsValid}>Create booking</Button>
+                <Button className="w-full" onClick={handleCreateBooking} disabled={!bookingIsValid || isCreatingBooking}>{isCreatingBooking ? "Creating booking..." : "Create booking"}</Button>
+                {createBookingError && (
+                                         <p className="text-sm text-destructive">
+                                                                                 We could not create your booking.
+                                                                                 Please try again.</p>
+                )}
               </CardContent>
             </Card>
           </aside>

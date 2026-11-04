@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit"
-import bookingReducer from "@/features/booking/bookingSlice"
+import bookingReducer from "@/features/bookings/bookingSlice"
 import { hotelApi } from "@/services/hotelApi"
+import { bookingApi } from "@/features/bookings/bookingApi"
 
 export const store = configureStore({
   reducer: {
@@ -8,10 +9,14 @@ export const store = configureStore({
 
     // RTK Query keeps API data here
     [hotelApi.reducerPath]: hotelApi.reducer,
+    [bookingApi.reducerPath]: bookingApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(hotelApi.middleware),
+    getDefaultMiddleware().concat(
+      hotelApi.middleware,
+      bookingApi.middleware,
+    ),
 })
 
 // TypeScript types generated from the store
