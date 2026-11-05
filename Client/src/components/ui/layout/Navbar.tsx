@@ -40,28 +40,35 @@ function Navbar() {
           {!isLoading && (
             <>
               {!isAuthenticated ? (
-                // Login button
-                <Button
-                       className="rounded-lg bg-primary px-5 text-primary-foreground hover:bg-primary/90"
-                       onClick={() => loginWithRedirect()}>Sign in</Button>
-               ) : (
+                <>
+                {/* Sign in */}
+                   <Button
+                           variant="outline"
+                           className="rounded-lg px-5"
+                           onClick={() =>loginWithRedirect()}>Sign in</Button>
 
-                // Logout button
-                <Button
-                       variant="outline"
-                       className="rounded-lg px-5"
-                       onClick={() =>
-                       logout({
-                        logoutParams: {
-                         returnTo: window.location.origin,
-                        },
-                      })
-                    }> Sign out </Button>
+               {/* Create account */}
+               <Button
+                     className="rounded-lg bg-primary px-5 text-primary-foreground hover:bg-primary/90"
+                     onClick={() => loginWithRedirect({
+                                                       authorizationParams: {
+                                                       screen_hint: "signup",
+                                                   },
+                                                 })} > Create account </Button>
+                 </>
+                ) : (
+             < Button
+                     variant="outline"
+                     className="rounded-lg px-5"
+                     onClick={() => logout({
+                                    logoutParams: {
+                                          returnTo: window.location.origin,
+                                      },
+                                   })}> Sign out </Button>
                  )}
-             </>
-            )}
+               </>
+             )}
         </div>
-
       </div>
     </header>
   )
