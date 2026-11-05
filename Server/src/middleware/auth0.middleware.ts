@@ -1,4 +1,3 @@
-import "dotenv/config"
 import dotenv from "dotenv"
 import path from "path"
 import { auth } from "express-oauth2-jwt-bearer"

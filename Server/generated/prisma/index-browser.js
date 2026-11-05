@@ -120,8 +120,19 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  auth0Id: 'auth0Id',
+  email: 'email',
+  name: 'name',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.BookingScalarFieldEnum = {
   id: 'id',
+  userId: 'userId',
   hotelId: 'hotelId',
   roomTypeId: 'roomTypeId',
   checkIn: 'checkIn',
@@ -187,6 +198,11 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.UserRole = exports.$Enums.UserRole = {
+  USER: 'USER',
+  ADMIN: 'ADMIN'
+};
+
 exports.BookingStatus = exports.$Enums.BookingStatus = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
@@ -195,6 +211,7 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
 };
 
 exports.Prisma.ModelName = {
+  User: 'User',
   Booking: 'Booking',
   ConnectionTest: 'ConnectionTest',
   Hotel: 'Hotel',
