@@ -6,6 +6,7 @@ import { prisma } from "./config/prisma.js" // backend can talk to Neon PostgreS
 import hotelRoutes from "./routes/hotelRoutes.js"
 import bookingRoutes from "./routes/booking.routes.js" // backend can talk to Neon PostgreSQL
 import { validateAccessToken } from "./middleware/auth0.middleware.js";
+import userRoutes from "./routes/user.routes.js"
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ app.use("/api/hotels", hotelRoutes)
 
 // booking routes e.g., POST /api/bookings
 app.use("/api/bookings",bookingRoutes,)
+
+app.use("/api/users", userRoutes)
 
 // health check route
 app.get("/api/health", (_req, res) => {
