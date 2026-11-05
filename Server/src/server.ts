@@ -5,6 +5,7 @@ import dotenv from "dotenv"; // .env variable can be read
 import { prisma } from "./config/prisma.js" // backend can talk to Neon PostgreSQL
 import hotelRoutes from "./routes/hotelRoutes.js"
 import bookingRoutes from "./routes/booking.routes.js" // backend can talk to Neon PostgreSQL
+import { validateAccessToken } from "./middleware/auth0.middleware.js";
 
 dotenv.config();
 
@@ -55,6 +56,15 @@ app.get("/api/database-test", async (_req, res) => {
     });
   }
 });
+
+// Protected test route Only users with a valid Auth0 access token can access this
+app.get("/api/protected", validateAccessToken,(_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "You are authenticated",
+    })
+  }
+)
 
 // starts the server only when running locally 
 if (process.env.NODE_ENV !== "production") { 
