@@ -3,6 +3,7 @@ import HotelCard from "@/components/hotel/HotelCard"
 const hotels = [
   {
     name: "The Fern House",
+    slug: "the-silo-hotel",
     location: "Sandton, Johannesburg",
     price: 1850,
     rating: 4.9,
@@ -12,6 +13,7 @@ const hotels = [
   },
   {
     name: "Harbour View Hotel",
+    slug: "harbour-view-hotel",
     location: "Cape Town, Western Cape",
     price: 2300,
     rating: 4.8,
@@ -21,6 +23,7 @@ const hotels = [
   },
   {
     name: "The City Lodge",
+    slug: "the-city-lodge",
     location: "Rosebank, Johannesburg",
     price: 1650,
     rating: 4.7,
@@ -43,6 +46,7 @@ function FeaturedHotels() {
           {hotels.map((hotel) => (
             <HotelCard
                        key={hotel.name}
+                       slug={hotel.slug}
                        name={hotel.name}
                        location={hotel.location}
                        price={hotel.price}
