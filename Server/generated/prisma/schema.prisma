@@ -19,8 +19,36 @@ enum BookingStatus {
   COMPLETED
 }
 
-model Booking {
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
   id Int @id @default(autoincrement())
+
+  // Auth0 gives every account a unique "sub" value.
+  auth0Id String @unique
+
+  // Information we copy from Auth0.
+  email String? @unique
+  name  String?
+
+  // Every new account starts as a normal user.
+  role UserRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One user can have many bookings.
+  bookings Booking[]
+}
+
+model Booking {
+  id     Int  @id @default(autoincrement())
+  // The logged-in user who owns this booking.
+  // Optional for now because older test bookings may not have a user.
+  userId Int?
 
   // The hotel being booked.
   hotelId Int
@@ -47,9 +75,11 @@ model Booking {
   updatedAt DateTime @updatedAt
 
   // Relationships.
+  user     User?    @relation(fields: [userId], references: [id])
   hotel    Hotel    @relation(fields: [hotelId], references: [id])
   roomType RoomType @relation(fields: [roomTypeId], references: [id])
 
+  @@index([userId])
   @@index([hotelId])
   @@index([roomTypeId])
   @@index([checkIn, checkOut])
