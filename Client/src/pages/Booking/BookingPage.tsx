@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useCreateBookingMutation } from "@/features/bookings/bookingApi"
+import { useAuth0 } from "@auth0/auth0-react"
+import { toast } from "sonner"
 
 
 function BookingPage() {
@@ -15,55 +17,53 @@ function BookingPage() {
   )
 
   // Get the selected hotel from the backend
-  const { data: hotel, isLoading, isError,} = useGetHotelBySlugQuery(
-    booking.hotelSlug ?? "",
-    {
+  const { data: hotel, isLoading, isError,} = useGetHotelBySlugQuery( booking.hotelSlug ?? "", {
         // Do not make the API request if no hotel was selected
         skip: !booking.hotelSlug,
      }
    )
 
-    const [ createBooking, { 
-                               isLoading: isCreatingBooking, 
-                               error: createBookingError, },] = useCreateBookingMutation()
+  const [ createBooking, { 
+                           isLoading: isCreatingBooking, 
+                           error: createBookingError, },] = useCreateBookingMutation()
 
-    // Find the room selected on HotelDetailsPage
-     const selectedRoom = hotel?.rooms.find(
-    (room) => room.id === booking.roomTypeId
-  )
+  const {
+          isAuthenticated,
+          loginWithRedirect,
+          getAccessTokenSilently,
+        } = useAuth0()
 
-    // Calculate how many nights the guest is staying
-    const nights = useMemo(() => {
-    // We need both dates before calculating
-    if (!booking.checkIn || !booking.checkOut) {
-      return 0
-    }
+   // Find the room selected on HotelDetailsPage
+  const selectedRoom = hotel?.rooms.find( (room) => room.id === booking.roomTypeId)
 
-     const checkInDate = new Date(booking.checkIn)
-     const checkOutDate = new Date(booking.checkOut)
+   // Calculate how many nights the guest is staying
+  const nights = useMemo(() => {
+                                // We need both dates before calculating
+                               if (!booking.checkIn || !booking.checkOut) {
+                               return 0 }
 
-     // Difference between the dates in milliseconds
-     const difference = checkOutDate.getTime() - checkInDate.getTime()
+  const checkInDate = new Date(booking.checkIn)
+  const checkOutDate = new Date(booking.checkOut)
 
-     // Convert milliseconds into days
-     const numberOfNights = difference / (1000 * 60 * 60 * 24)
+   // Difference between the dates in milliseconds
+  const difference = checkOutDate.getTime() - checkInDate.getTime()
+
+  // Convert milliseconds into days
+  const numberOfNights = difference / (1000 * 60 * 60 * 24)
 
      // Do not allow negative nights
-     return numberOfNights > 0
-        ? numberOfNights
-        : 0
+     return numberOfNights > 0 ? numberOfNights : 0
       }, [
            booking.checkIn,
            booking.checkOut,
          ])
 
-    const nightlyPrice = selectedRoom ? Number(selectedRoom.price) : 0 // Convert Prisma Decimal/string room price into a number
-    const totalPrice = nights * nightlyPrice *booking.rooms // Final booking total 
-    const datesAreValid = booking.checkIn !== "" && booking.checkOut !== "" && nights > 0  // Check whether the dates are valid
-    const roomsAreAvailable = selectedRoom ? booking.rooms <= selectedRoom.quantity: false // Check whether enough rooms are available
-    const bookingIsValid = selectedRoom && datesAreValid && roomsAreAvailable && booking.guests > 0 && booking.rooms > 0 // Basic validation before we allow the booking
-
-
+  const nightlyPrice = selectedRoom ? Number(selectedRoom.price) : 0 // Convert Prisma Decimal/string room price into a number
+  const totalPrice = nights * nightlyPrice *booking.rooms // Final booking total 
+  const datesAreValid = booking.checkIn !== "" && booking.checkOut !== "" && nights > 0  // Check whether the dates are valid
+  const roomsAreAvailable = selectedRoom ? booking.rooms <= selectedRoom.quantity: false // Check whether enough rooms are available
+  const bookingIsValid = selectedRoom && datesAreValid && roomsAreAvailable && booking.guests > 0 && booking.rooms > 0 // Basic validation before we allow the booking
+  
    // Loading hotel/room information
    if (isLoading) {
     return (
@@ -82,7 +82,6 @@ function BookingPage() {
       </main>
     )
   }
-
 
   // User opened /booking without choosing a hotel/room
   if (!hotel || !selectedRoom) {
@@ -104,31 +103,54 @@ function BookingPage() {
   }
 
   async function handleCreateBooking() {
+    
   // Make sure all required booking information exists.
-  if (!hotel || !selectedRoom || !booking.checkIn || !booking.checkOut
+  if (!hotel || !selectedRoom || !booking.checkIn || !booking.checkOut || !bookingIsValid
   ) {
     return
   }
 
+  // if the user is not logged in, send them to Auth0 first
+  if (!isAuthenticated) {
+    await loginWithRedirect({
+      appState: {
+        returnTo: "/booking",
+      },
+    })
+    return
+  }
+
   try {
+    // Get the Auth0 acces token
+    const accessToken = await getAccessTokenSilently()
+
+    // if error in sign in 
+    if (typeof accessToken !== "string") {
+      toast.error("Could not verify your login. Please sign again.")
+      return
+    }
+
     // Send the booking information to the backend.
     const result = await createBooking({
-      hotelId: hotel.id,
-      roomTypeId: selectedRoom.id,
+      accessToken, 
 
-      checkIn: booking.checkIn,
-      checkOut: booking.checkOut,
+      booking: { 
+                 hotelId: hotel.id,
+                 roomTypeId: selectedRoom.id,
 
-      guests: booking.guests,
-      rooms: booking.rooms,
-    }).unwrap()
+                 checkIn: booking.checkIn,
+                 checkOut: booking.checkOut,
 
-    console.log("Booking created:", result.data)
-    alert(`Booking #${result.data.id} created successfully.`,)
-  } catch (error) {
-    console.error("Booking failed:", error)
-  }
-}
+                 guests: booking.guests,
+                 rooms: booking.rooms,
+              },
+      }).unwrap()
+
+     toast.success( `Booking #${result.data.id} created successfully.`)
+     } catch (error) { console.error("Booking failed:", error)
+   
+      toast.error( "We could not create your booking. Please try again." )
+    }
 
   return (
     <main className="min-h-screen bg-background">

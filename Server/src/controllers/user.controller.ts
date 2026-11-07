@@ -1,10 +1,7 @@
 import type { Request, Response } from "express"
 import { syncAuthUser } from "../service/user.service.js"
 
-export async function getCurrentUser(
-  req: Request,
-  res: Response,
-) {
+export async function getCurrentUser( req: Request, res: Response,) {
   try {
     // Auth0 stores the unique user ID in "sub".
     const auth0Id = req.auth?.payload.sub
@@ -30,9 +27,8 @@ export async function getCurrentUser(
     // Find or create the user in Neon.
     const user = await syncAuthUser({
       auth0Id,
-      ...(email !== undefined ? { email } : {}),
-      ...(name !== undefined ? { name } : {}),
-    })
+              ...(email ? { email } : {}),
+              ...(name ? { name } : {}), })
 
     return res.status(200).json({
       success: true,
@@ -43,7 +39,6 @@ export async function getCurrentUser(
 
     return res.status(500).json({
       success: false,
-      message: "Could not load user.",
-    })
+      message: "Could not load user.", })
   }
 }

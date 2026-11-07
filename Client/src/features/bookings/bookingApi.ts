@@ -28,6 +28,11 @@ type CreateBookingResponse = {
   data: Booking
 }
 
+type CreateBookingArgs = {
+  booking: CreateBookingRequest
+  accessToken: string
+}
+
 export const bookingApi = createApi({
   reducerPath: "bookingApi",
 
@@ -38,12 +43,15 @@ export const bookingApi = createApi({
   endpoints: (builder) => ({
     createBooking: builder.mutation<
         CreateBookingResponse,
-        CreateBookingRequest
+        CreateBookingArgs
       >({
-          query: (booking) => ({
+          query: ({booking, accessToken }) => ({
           url: "/bookings",
           method: "POST",
           body: booking,
+
+          headers: { Authorization: `Bearer ${accessToken}`,
+          }
         }),
       }),
   }),

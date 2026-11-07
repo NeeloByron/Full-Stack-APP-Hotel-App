@@ -1,6 +1,7 @@
 import { prisma } from "../config/prisma.js"
 
 type CreateBookingInput = {
+  userId: number
   hotelId: number
   roomTypeId: number
   checkIn: string
@@ -10,7 +11,7 @@ type CreateBookingInput = {
 }
 
 export async function createBooking(input: CreateBookingInput) {
-  const { hotelId, roomTypeId, checkIn, checkOut, guests, rooms,} = input
+  const { userId, hotelId, roomTypeId, checkIn, checkOut, guests, rooms,} = input
 
   const checkInDate = new Date(checkIn)
   const checkOutDate = new Date(checkOut)
@@ -146,22 +147,20 @@ export async function createBooking(input: CreateBookingInput) {
   const booking =
     await prisma.booking.create({
       data: {
+        userId,
         hotelId,
         roomTypeId,
-
         checkIn: checkInDate,
         checkOut: checkOutDate,
-
         guests,
         rooms,
-
         nightlyPrice,
         totalPrice,
-
         status: "PENDING",
       },
 
       include: {
+        user: true,
         hotel: true,
         roomType: true,
       },
