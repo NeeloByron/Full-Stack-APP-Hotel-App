@@ -33,6 +33,47 @@ type CreateBookingArgs = {
   accessToken: string
 }
 
+type BookingHotel = {
+  id: number
+  name: string
+  slug: string
+  mainImage: string
+  city: string
+}
+
+type BookingRoom = {
+  id: number
+  name: string
+  price: string
+}
+
+export type MyBooking = {
+  id: number
+
+  hotelId: number
+  roomTypeId: number
+  userId: number | null
+
+  checkIn: string
+  checkOut: string
+
+  guests: number
+  rooms: number
+
+  nightlyPrice: string
+  totalPrice: string
+
+  status: | "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED"
+
+  hotel: BookingHotel
+  roomType: BookingRoom
+}
+
+type MyBookingsResponse = {
+  success: boolean
+  data: MyBooking[]
+}
+
 export const bookingApi = createApi({
   reducerPath: "bookingApi",
 
@@ -54,9 +95,24 @@ export const bookingApi = createApi({
           }
         }),
       }),
+
+      // Get bookings belonging to the logged-in user
+      getMyBookings: builder.query<
+       MyBookingsResponse,
+       string
+     >({
+      query: (accessToken) => ({
+       url: "/bookings/me",
+
+        headers: { Authorization: `Bearer ${accessToken}`,
+      },
+   
+      }),
+    }),
   }),
 })
 
 export const {
                  useCreateBookingMutation,
+                 useGetMyBookingsQuery,
              } = bookingApi

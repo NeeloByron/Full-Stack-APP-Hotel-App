@@ -1,5 +1,5 @@
 import type { Request, Response, } from "express"
-import { createBooking } from "../service/booking.service.js"
+import { createBooking, getBookingsForUser } from "../service/booking.service.js"
 import { syncAuthUser } from "../service/user.service.js"
 
 export async function createBookingController(req: Request, res: Response,) {
@@ -65,3 +65,34 @@ export async function createBookingController(req: Request, res: Response,) {
     })
   }
 }
+
+export async function getMyBookingsController(
+  req: Request,
+  res: Response,
+) {
+  try {
+    // Auth0 puts the logged-in user's unique ID in "sub".
+    const auth0Id = req.auth?.payload.sub
+
+    if (!auth0Id) {
+      return res.status(401).json({
+                                    success: false,
+                                    message: "Authentication required.",
+                               })
+                             }
+
+    const bookings = await getBookingsForUser(auth0Id)
+
+    return res.status(200).json({
+                                  success: true,
+                                  data: bookings,
+                               })
+    } catch (error) {
+    console.error( "Get my bookings error:", error, )
+
+    return res.status(500).json({
+                                  success: false,
+                                  message: "Could not load bookings.",
+                             })
+                            }
+                          }

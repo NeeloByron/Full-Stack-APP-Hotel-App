@@ -168,3 +168,31 @@ export async function createBooking(input: CreateBookingInput) {
 
   return booking
 }
+
+export async function getBookingsForUser(
+  auth0Id: string,
+) {
+  // Find the logged-in user in our database.
+  const user = await prisma.user.findUnique({
+    where: {
+      auth0Id,
+    },
+  })
+
+  // If the Auth0 user has not been synced yet, they simply have no bookings.
+  if (!user) {
+    return []
+  }
+
+  // Return only bookings owned by this user.
+  return prisma.booking.findMany({
+    where: { userId: user.id, },
+
+    include: {
+              hotel: true,
+              roomType: true,
+            },
+
+    orderBy: { createdAt: "desc", },
+  })
+}

@@ -151,6 +151,7 @@ function BookingPage() {
    
       toast.error( "We could not create your booking. Please try again." )
     }
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -337,6 +338,6 @@ function BookingPage() {
       </div>
     </main>
   )
-}
+ }
 
-export default BookingPage
+export default BookingPage 
