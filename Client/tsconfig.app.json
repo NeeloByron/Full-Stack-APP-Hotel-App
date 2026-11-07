@@ -26,5 +26,5 @@
 
     "ignoreDeprecations": "6.0"
   },
-  "include": ["src"]
+  "include": ["src", "../Server/src/service/payment.service.ts"]
 }
