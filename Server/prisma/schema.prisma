@@ -15,6 +15,7 @@ model Booking {
   checkOut     DateTime
   guests       Int
   rooms        Int
+  userId       Int?
   nightlyPrice Decimal       @db.Decimal(10, 2)
   totalPrice   Decimal       @db.Decimal(10, 2)
   status       BookingStatus @default(PENDING)
@@ -22,7 +23,9 @@ model Booking {
   updatedAt    DateTime      @updatedAt
   hotel        Hotel         @relation(fields: [hotelId], references: [id])
   roomType     RoomType      @relation(fields: [roomTypeId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
 
+  @@index([userId])
   @@index([hotelId])
   @@index([roomTypeId])
   @@index([checkIn, checkOut])
@@ -75,4 +78,26 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  // Auth0 unique user ID
+  auth0Id String @unique
+
+  email String? @unique
+  name  String?
+
+  role UserRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
 }

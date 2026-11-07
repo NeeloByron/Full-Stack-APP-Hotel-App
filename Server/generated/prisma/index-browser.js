@@ -120,25 +120,15 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  auth0Id: 'auth0Id',
-  email: 'email',
-  name: 'name',
-  role: 'role',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.BookingScalarFieldEnum = {
   id: 'id',
-  userId: 'userId',
   hotelId: 'hotelId',
   roomTypeId: 'roomTypeId',
   checkIn: 'checkIn',
   checkOut: 'checkOut',
   guests: 'guests',
   rooms: 'rooms',
+  userId: 'userId',
   nightlyPrice: 'nightlyPrice',
   totalPrice: 'totalPrice',
   status: 'status',
@@ -184,25 +174,30 @@ exports.Prisma.RoomTypeScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  auth0Id: 'auth0Id',
+  email: 'email',
+  name: 'name',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
-};
-
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.UserRole = exports.$Enums.UserRole = {
-  USER: 'USER',
-  ADMIN: 'ADMIN'
-};
 
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
 exports.BookingStatus = exports.$Enums.BookingStatus = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
@@ -210,12 +205,17 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
   COMPLETED: 'COMPLETED'
 };
 
+exports.UserRole = exports.$Enums.UserRole = {
+  USER: 'USER',
+  ADMIN: 'ADMIN'
+};
+
 exports.Prisma.ModelName = {
-  User: 'User',
   Booking: 'Booking',
   ConnectionTest: 'ConnectionTest',
   Hotel: 'Hotel',
-  RoomType: 'RoomType'
+  RoomType: 'RoomType',
+  User: 'User'
 };
 
 /**

@@ -10,7 +10,6 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/hotels" element={<HotelsPage />} />
-      <Route path="/hotels/:id" element={<HotelDetailsPage />} />
       <Route path="/hotels/:slug" element={<HotelDetailsPage />} />
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/auth-test" element={<AuthTestPage />} />
