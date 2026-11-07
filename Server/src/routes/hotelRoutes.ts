@@ -1,10 +1,11 @@
 import { Router } from "express"
 import { prisma } from "../config/prisma.js"
+import { validateAccessToken } from "../middleware/auth0.middleware.js"
+import { requireAdmin } from "../middleware/admin.middleware.js"
 
 const router = Router()
 
-// GET /api/hotels
-// Returns all active hotels
+// GET /api/hotels, Returns all active hotels
 router.get("/", async (_req, res) => {
   try {
     const hotels = await prisma.hotel.findMany({
@@ -34,6 +35,15 @@ router.get("/", async (_req, res) => {
     })
   }
 })
+
+// Temporary route used to test ADMIN authorization.
+router.get("/admin-check", validateAccessToken, requireAdmin, (_req, res) => {
+    return res.status(200).json({
+                                  success: true,
+                                  message: "Admin access granted.",
+                               })
+                            },
+                          ) 
 
 // GET /api/hotels/:slug
 // Returns one hotel
@@ -72,4 +82,3 @@ router.get("/:slug", async (req, res) => {
   }
 })
 
-export default router
