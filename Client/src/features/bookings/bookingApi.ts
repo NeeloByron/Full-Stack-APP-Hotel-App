@@ -74,6 +74,17 @@ type MyBookingsResponse = {
   data: MyBooking[]
 }
 
+type CancelBookingArgs = {
+  bookingId: number
+  accessToken: string
+}
+
+type CancelBookingResponse = {
+  success: boolean
+  message: string
+  data: MyBooking
+}
+
 export const bookingApi = createApi({
   reducerPath: "bookingApi",
 
@@ -105,14 +116,29 @@ export const bookingApi = createApi({
        url: "/bookings/me",
 
         headers: { Authorization: `Bearer ${accessToken}`,
-      },
-   
+       },
       }),
     }),
-  }),
-})
+
+    cancelBooking: builder.mutation<
+      CancelBookingResponse,
+      CancelBookingArgs
+      >({
+         query: ({bookingId, accessToken}) => ({
+           url: `/bookings/${bookingId}/cancel`,
+           method: "PATCH",
+
+           headers: {
+              Authorization: `Bearer ${accessToken}`,
+           },
+         }),
+      }),
+    }),
+   })
+
 
 export const {
                  useCreateBookingMutation,
                  useGetMyBookingsQuery,
+                 useCancelBookingMutation,
              } = bookingApi

@@ -196,3 +196,54 @@ export async function getBookingsForUser(
     orderBy: { createdAt: "desc", },
   })
 }
+
+export async function cancelBookingForUser(
+  bookingId: number,
+  auth0Id: string,
+) {
+  // Find the logged-in user.
+  const user = await prisma.user.findUnique({
+    where: {
+      auth0Id,
+    },
+  })
+
+  if (!user) {
+    throw new Error("User not found.")
+  }
+
+  // Find the booking and make sure it belongs to this user.
+  const booking = await prisma.booking.findFirst({
+    where: {
+             id: bookingId,
+             userId: user.id,
+          },
+     })
+
+  if (!booking) {
+    throw new Error("Booking not found or you do not have permission to cancel it.",)
+  }
+
+  if (booking.status === "CANCELLED") {
+    throw new Error("Booking is already cancelled.")
+  }
+
+  if (booking.status === "COMPLETED") {
+    throw new Error(
+      "Completed bookings cannot be cancelled.",
+    )
+  }
+
+  // Update the booking status.
+  return prisma.booking.update({
+    where: {
+             id: booking.id,
+         },
+
+    data: {
+            status: "CANCELLED",
+         },
+
+    include: { hotel: true, roomType: true, },
+  })
+}

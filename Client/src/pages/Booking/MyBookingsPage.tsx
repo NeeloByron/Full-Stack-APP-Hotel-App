@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
-import { useGetMyBookingsQuery } from "@/features/bookings/bookingApi"
+import { useGetMyBookingsQuery, useCancelBookingMutation,  } from "@/features/bookings/bookingApi"
 import { Card, CardContent, CardHeader, CardTitle, } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 function MyBookingsPage() {
   const {
@@ -23,7 +25,7 @@ function MyBookingsPage() {
       if (!isAuthenticated) {
         await loginWithRedirect({
           appState: {
-            returnTo: "/my-bookings",
+            returnTo: "/bookings",
           },
         })
 
@@ -45,12 +47,39 @@ function MyBookingsPage() {
     loginWithRedirect,
   ])
 
-  const { data, isLoading, isError, } = useGetMyBookingsQuery(
+  const { data, isLoading, isError, refetch, } = useGetMyBookingsQuery(
     accessToken ?? "",
     {
       skip: !accessToken,
     },
   )
+
+  const [ cancelBooking, { isLoading: isCancellingBooking },] = useCancelBookingMutation()
+
+
+  async function handleCancelBooking( bookingId: number,) {
+  if (!accessToken) {
+      toast.error("Could not verify your login.",)
+
+    return
+  }
+
+  try {
+    await cancelBooking({
+                          bookingId,
+                          accessToken,
+                        }).unwrap()
+
+    toast.success("Booking cancelled successfully.",)
+
+    // Reload bookings so the new CANCELLED  status appears immediately.
+    await refetch()
+  } catch (error) {
+    console.error("Cancel booking failed:", error,)
+
+    toast.error("We could not cancel your booking.",)
+  }
+} 
 
   if (authLoading || !accessToken || isLoading) {
     return (
@@ -96,37 +125,85 @@ function MyBookingsPage() {
                       <p className="mt-2 text-sm text-muted-foreground"> {booking.roomType.name}</p>
                     </div>
 
-                    <span className="rounded-full border px-3 py-1 text-xs font-medium">
-                      {booking.status}
-                    </span>
+                    <span className="rounded-full border px-3 py-1 text-xs font-medium">{booking.status}</span>
                   </div>
                 </CardHeader>
 
                 <CardContent>
-                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Check-in </p>
-                      <p className="mt-1 text-sm font-medium">{new Date(booking.checkIn,).toLocaleDateString("en-ZA",)}
-                      </p>
-                    </div>
+  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    {/* Check-in */}
+    <div>
+      <p className="text-xs text-muted-foreground">
+        Check-in
+      </p>
 
-                    <div>
-                      <p className="text-xs text-muted-foreground"> Check-out</p>
-                      <p className="mt-1 text-sm font-medium">{new Date(booking.checkOut,).toLocaleDateString("en-ZA",)}
-                      </p>
-                    </div>
+      <p className="mt-1 text-sm font-medium">
+        {new Date(
+          booking.checkIn
+        ).toLocaleDateString("en-ZA")}
+      </p>
+    </div>
 
-                    <div>
-                      <p className="text-xs text-muted-foreground">Rooms</p>
-                      <p className="mt-1 text-sm font-medium">{booking.rooms}</p>
-                    </div>
+    {/* Check-out */}
+    <div>
+      <p className="text-xs text-muted-foreground">
+        Check-out
+      </p>
 
-                    <div>
-                      <p className="text-xs text-muted-foreground">Total</p>
-                      <p className="mt-1 text-sm font-semibold"> R{Number(booking.totalPrice,).toLocaleString("en-ZA",)}</p>
-                    </div>
-                  </div>
-                </CardContent>
+      <p className="mt-1 text-sm font-medium">
+        {new Date(
+          booking.checkOut
+        ).toLocaleDateString("en-ZA")}
+      </p>
+    </div>
+
+    {/* Rooms */}
+    <div>
+      <p className="text-xs text-muted-foreground">
+        Rooms
+      </p>
+
+      <p className="mt-1 text-sm font-medium">
+        {booking.rooms}
+      </p>
+    </div>
+
+    {/* Total */}
+    <div>
+      <p className="text-xs text-muted-foreground">
+        Total
+      </p>
+
+      <p className="mt-1 text-sm font-semibold">
+        R
+        {Number(
+          booking.totalPrice
+        ).toLocaleString("en-ZA")}
+      </p>
+    </div>
+  </div>
+
+  {/* Only show cancel button for active bookings */}
+  {booking.status !== "CANCELLED" &&
+    booking.status !== "COMPLETED" && (
+      <div className="mt-6 border-t border-border pt-4">
+        <Button
+          variant="outline"
+          onClick={() =>
+            handleCancelBooking(
+              booking.id
+            )
+          }
+          disabled={isCancellingBooking}
+        >
+          {isCancellingBooking
+            ? "Cancelling..."
+            : "Cancel booking"}
+        </Button>
+      </div>
+    )}
+</CardContent>
+                
               </Card>
             ))}
           </div>
