@@ -146,9 +146,39 @@ function BookingPage() {
               },
       }).unwrap()
 
-     toast.success( `Booking #${result.data.id} created successfully.`)
-     } catch (error) { console.error("Booking failed:", error)
-   
+     // Start payment for the booking we just created.
+    const paymentResponse = await fetch( "/api/payments/initialize",
+    {
+      method: "POST",
+
+      headers: {
+       Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+     },
+  
+      body: JSON.stringify({
+      bookingId: result.data.id,
+     }),
+   },
+ )
+
+ const paymentResult = await paymentResponse.json()
+
+ // Make sure Paystack initialization worked.
+ if ( !paymentResponse.ok || !paymentResult.success ) {
+   throw new Error( paymentResult.message || "Could not start payment.", )
+}
+
+ // Paystack gives us a secure checkout URL.
+ const authorizationUrl = paymentResult.data.authorization_url
+
+ if (!authorizationUrl) {
+  throw new Error( "Payment checkout URL was not returned.", )
+}
+
+ // Send the user to Paystack's secure card payment page.
+  window.location.href = authorizationUrl
+    } catch (error) { console.error("Booking failed:", error)
       toast.error( "We could not create your booking. Please try again." )
     }
   }
@@ -325,7 +355,7 @@ function BookingPage() {
                   <p className="mt-1 text-2xl font-semibold">R{totalPrice.toLocaleString("en-ZA")}</p>
                 </div>
 
-                <Button className="w-full" onClick={handleCreateBooking} disabled={!bookingIsValid || isCreatingBooking}>{isCreatingBooking ? "Creating booking..." : "Create booking"}</Button>
+                <Button className="w-full" onClick={handleCreateBooking} disabled={!bookingIsValid || isCreatingBooking}>{isCreatingBooking ? "Preparing payment..." : `Continue to payment · R${totalPrice.toLocaleString("en-ZA", )}`}</Button>
                 {createBookingError && (
                                          <p className="text-sm text-destructive">
                                                                                  We could not create your booking.

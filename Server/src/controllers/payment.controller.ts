@@ -1,6 +1,6 @@
 import type { Request, Response, } from "express"
 import { prisma } from "../config/prisma.js"
-import { initializePayment } from "../service/payment.service.js"
+import { initializePayment, verifyPayment } from "../service/payment.service.js"
 
 // POST /api/payments/initialize - Starts a Paystack payment for one booking.
 export async function initializePaymentController( req: Request, res: Response,) {
@@ -65,6 +65,35 @@ export async function initializePaymentController( req: Request, res: Response,)
     return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : "Could not initialize payment.",
+    })
+  }
+}
+
+export async function verifyPaymentController( req: Request, res: Response,) {
+  try {
+    const referenceParam = req.params.reference
+    const reference = Array.isArray(referenceParam) ? referenceParam[0] : referenceParam
+
+    if (!reference) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment reference is required.",
+      })
+    }
+
+    const payment = await verifyPayment(reference)
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment verified successfully.",
+      data: payment,
+    })
+  } catch (error) {
+    console.error( "Verify payment error:", error, )
+
+    return res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : "Could not verify payment.",
     })
   }
 }

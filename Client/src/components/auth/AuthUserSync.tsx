@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
 
 export function AuthUserSync() {
-  const { isAuthenticated, isLoading, getAccessTokenSilently,} = useAuth0()
+  const { isAuthenticated, isLoading, getAccessTokenSilently, user, } = useAuth0()
 
   useEffect(() => {
     async function syncUser() {
@@ -17,15 +17,18 @@ export function AuthUserSync() {
           await getAccessTokenSilently()
 
         // Send the token to our protected backend route.
-        const response = await fetch(
-          "/api/users/me",
-          {
-            method: "GET",
+        const response = await fetch("/api/users/me",{
+            method: "POST",
 
             headers: {
-              Authorization:
-                `Bearer ${accessToken}`,
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
             },
+
+            body: JSON.stringify({
+                email: user?.email,
+                name: user?.name,
+            })
           },
         )
 
@@ -42,7 +45,7 @@ export function AuthUserSync() {
     }
 
     syncUser()
-  }, [ isAuthenticated, isLoading, getAccessTokenSilently,]
+  }, [ isAuthenticated, isLoading, getAccessTokenSilently, user,]
  )
 
   // This component has no visible UI.

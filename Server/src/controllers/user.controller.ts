@@ -14,26 +14,21 @@ export async function getCurrentUser( req: Request, res: Response,) {
     }
 
     // These values may be present in the access token.
-    const email =
-      typeof req.auth?.payload.email === "string"
-        ? req.auth.payload.email
-        : undefined
+    const email = typeof req.body.email === "string" ? req.body.email : undefined
 
-    const name =
-      typeof req.auth?.payload.name === "string"
-        ? req.auth.payload.name
-        : undefined
-
+    const name = typeof req.body.name === "string" ? req.body.name : undefined
+   
     // Find or create the user in Neon.
     const user = await syncAuthUser({
       auth0Id,
-              ...(email ? { email } : {}),
-              ...(name ? { name } : {}), })
+              ...(email !== undefined ? { email } : {}),
+              ...(name !== undefined ? { name }: {}),})
 
     return res.status(200).json({
       success: true,
       data: user,
     })
+    
   } catch (error) {
     console.error("Get current user error:", error)
 
