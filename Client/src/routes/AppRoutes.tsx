@@ -4,6 +4,9 @@ import HotelsPage from "@/pages/Hotels/HotelsPage"
 import HotelDetailsPage from "@/pages/HotelDetails/HotelDetailsPage"
 import BookingPage from "@/pages/Booking/BookingPage"
 import AuthTestPage from "@/pages/AuthTest/AuthTestPage"
+import MyBookingsPage from "@/pages/Booking/MyBookingsPage"
+import ProfilePage from "@/pages/Profile/ProfilePage"
+import HostPage from "@/pages/Host/HostPage"
 
 function AppRoutes() {
   return (
@@ -13,6 +16,14 @@ function AppRoutes() {
       <Route path="/hotels/:slug" element={<HotelDetailsPage />} />
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/auth-test" element={<AuthTestPage />} />
+      <Route path="/bookings" element={<MyBookingsPage />} />
+
+      <Route path="/profile" element={<ProfilePage />} />
+
+      <Route path="/hosting" element={<HostPage />} />
+      <Route path="/hosting/calendar" element={<HostPage />} />
+      <Route path="/hosting/listings" element={<HostPage />} />
+      <Route path="/hosting/messages" element={<HostPage />} />
     </Routes>
   )
 }

@@ -44,6 +44,7 @@ function HotelCard({ name, location, price, rating, image, tag, slug }: HotelCar
 
       <CardFooter className="p-5 pt-0">
          <Button
+                 nativeButton={false}
                  variant="outline"
                  className="w-full"
                  render={<Link to={`/hotels/${slug}`} />} >View hotel</Button>

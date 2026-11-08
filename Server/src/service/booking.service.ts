@@ -1,6 +1,7 @@
 import { prisma } from "../config/prisma.js"
 
 type CreateBookingInput = {
+  userId: number
   hotelId: number
   roomTypeId: number
   checkIn: string
@@ -10,7 +11,7 @@ type CreateBookingInput = {
 }
 
 export async function createBooking(input: CreateBookingInput) {
-  const { hotelId, roomTypeId, checkIn, checkOut, guests, rooms,} = input
+  const { userId, hotelId, roomTypeId, checkIn, checkOut, guests, rooms,} = input
 
   const checkInDate = new Date(checkIn)
   const checkOutDate = new Date(checkOut)
@@ -146,26 +147,103 @@ export async function createBooking(input: CreateBookingInput) {
   const booking =
     await prisma.booking.create({
       data: {
+        userId,
         hotelId,
         roomTypeId,
-
         checkIn: checkInDate,
         checkOut: checkOutDate,
-
         guests,
         rooms,
-
         nightlyPrice,
         totalPrice,
-
         status: "PENDING",
       },
 
       include: {
+        user: true,
         hotel: true,
         roomType: true,
       },
     })
 
   return booking
+}
+
+export async function getBookingsForUser(
+  auth0Id: string,
+) {
+  // Find the logged-in user in our database.
+  const user = await prisma.user.findUnique({
+    where: {
+      auth0Id,
+    },
+  })
+
+  // If the Auth0 user has not been synced yet, they simply have no bookings.
+  if (!user) {
+    return []
+  }
+
+  // Return only bookings owned by this user.
+  return prisma.booking.findMany({
+    where: { userId: user.id, },
+
+    include: {
+              hotel: true,
+              roomType: true,
+            },
+
+    orderBy: { createdAt: "desc", },
+  })
+}
+
+export async function cancelBookingForUser(
+  bookingId: number,
+  auth0Id: string,
+) {
+  // Find the logged-in user.
+  const user = await prisma.user.findUnique({
+    where: {
+      auth0Id,
+    },
+  })
+
+  if (!user) {
+    throw new Error("User not found.")
+  }
+
+  // Find the booking and make sure it belongs to this user.
+  const booking = await prisma.booking.findFirst({
+    where: {
+             id: bookingId,
+             userId: user.id,
+          },
+     })
+
+  if (!booking) {
+    throw new Error("Booking not found or you do not have permission to cancel it.",)
+  }
+
+  if (booking.status === "CANCELLED") {
+    throw new Error("Booking is already cancelled.")
+  }
+
+  if (booking.status === "COMPLETED") {
+    throw new Error(
+      "Completed bookings cannot be cancelled.",
+    )
+  }
+
+  // Update the booking status.
+  return prisma.booking.update({
+    where: {
+             id: booking.id,
+         },
+
+    data: {
+            status: "CANCELLED",
+         },
+
+    include: { hotel: true, roomType: true, },
+  })
 }
