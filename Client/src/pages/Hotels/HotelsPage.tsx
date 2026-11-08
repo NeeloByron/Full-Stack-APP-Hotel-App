@@ -8,6 +8,8 @@ import HotelFilters from "@/components/hotel/HotelFilters"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select"
 import { useGetHotelsQuery, type Hotel, } from "@/services/hotelApi"
+import HotelMap from "@/components/hotel/HotelMap"
+import { Button } from "@/components/ui/button"
 
 // finds the cheapest room price for a hotel 
 function getLowestRoomPrice(hotel: Hotel) {
@@ -30,6 +32,7 @@ function HotelsPage() {
     const [sortBy, setSortBy] = useState("recommended") // Stores which sorting option the user selected
     const [priceFilters, setPriceFilters] = useState<string[]>([]) // Stores selected price filters
     const [ratingFilters, setRatingFilters] = useState<number[]>([]) // Stores selected rating filters
+    const [showMobileMap, setShowMobileMap] = useState(false)
 
     // adds or removes a selected filters
     const toggleFilter = <T,>(
@@ -121,7 +124,7 @@ function HotelsPage() {
   return (
     
      <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-7xl px-6 py-12 lg:py-16">
+      <main className="mx-auto max-w-[1600px] px-5 py-10 lg:py-8">
 
         {/* Page heading */}
         <div className="mb-10">
@@ -172,55 +175,71 @@ function HotelsPage() {
 
         </div>
 
+        {/* Filters above the results leave room for the map. */}
+        <details className="mb-8 rounded-2xl border border-border bg-card">
+         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold">Filter stays</summary>
 
-        {/* Filters on the left + hotel cards on the right */}
-        <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
-
-          {/* Hotel filters */}
-          <HotelFilters
-                       priceFilters={priceFilters}
-                       ratingFilters={ratingFilters}
-                       onPriceChange={(value) =>
-                     toggleFilter(value, setPriceFilters)
-                 }
-            onRatingChange={(value) =>
-              toggleFilter(value, setRatingFilters)} />
-
-
-          {/* Hotel results */}
-          <div>
-
-            {/* Number of hotels found */}
-            <p className="mb-5 text-sm text-muted-foreground">{filteredHotels.length} hotels found</p>
-
-
-            {/* If hotels were found, display them */}
-            {filteredHotels.length > 0 ? (
-
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-
-                {filteredHotels.map((hotel) => (
-
-                  <HotelCard
-                            key={hotel.id} 
-                            slug={hotel.slug}
-                            name={hotel.name}  // Hotel name from Neon
-                            location={`${hotel.city}, ${hotel.province}`} // Combine city and province into one location
-                            price={getLowestRoomPrice(hotel)} // Display the cheapest available room price
-                            rating={hotel.guestRating ?? 0} // If guestRating is null, use 0
-                            image={hotel.mainImage} // Hotel image stored in Neon
-                  />
-                ))}
-              </div>
-              ) : (
-              // Show this if filters/search return no hotels
-              <div className="rounded-xl border border-border bg-card p-10 text-center">
-                <h2 className="text-lg font-medium text-foreground">No hotels found</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Try searching for another hotel or location</p>
-              </div>
-             )}
-          </div>
+       <div className="border-t border-border p-5">
+         <HotelFilters
+                        priceFilters={priceFilters}
+                        ratingFilters={ratingFilters}
+                        onPriceChange={(value) => toggleFilter(value, setPriceFilters)}
+                       onRatingChange={(value) => toggleFilter(value, setRatingFilters) }/>
         </div>
+      </details>
+
+      {/* Mobile view switch */}
+       <div className="mb-5 flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground"> {filteredHotels.length} hotels found </p>
+
+         <Button
+                 type="button"
+                 variant="outline"
+                 aria-pressed={showMobileMap}
+                 onClick={() => setShowMobileMap(!showMobileMap)}
+                 className="rounded-full lg:hidden"  >  {showMobileMap ? "Show list" : "Show map"}
+         </Button>
+     </div>
+
+   {/* Hotel cards and map */}
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+     {/* Results list */}
+      <section
+              aria-label="Hotel results"
+              className={showMobileMap ? "hidden lg:block" : "block"} >
+    {filteredHotels.length > 0 ? (
+      <div className="grid gap-6 sm:grid-cols-2">
+        {filteredHotels.map((hotel) => (
+          <HotelCard
+            key={hotel.id}
+            slug={hotel.slug}
+            name={hotel.name}
+            location={`${hotel.city}, ${hotel.province}`}
+            price={getLowestRoomPrice(hotel)}
+            rating={hotel.guestRating ?? 0}
+            image={hotel.mainImage}
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="rounded-2xl border border-border bg-card p-10 text-center">
+        <h2 className="text-lg font-semibold">No hotels found </h2>
+        <p className="mt-2 text-sm text-muted-foreground">Try another destination or change your filters. </p>
+      </div>
+    )}
+  </section>
+
+  {/* Map stays alongside the list on desktop. */}
+  <aside
+    aria-label="Hotel locations"
+    className={[
+      "h-[65vh] min-h-96",
+      "lg:sticky lg:top-32 lg:h-[calc(100dvh-10rem)]",
+      showMobileMap ? "block" : "hidden lg:block",
+    ].join(" ")}>
+    <HotelMap hotels={filteredHotels} />
+      </aside>
+       </div>
       </main>
     </div>
   )

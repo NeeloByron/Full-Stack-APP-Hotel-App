@@ -11,24 +11,16 @@ function HomePage() {
       <main>
         {/* Hero section */}
         <section className="border-b border-border">
-          <div className="mx-auto max-w-7xl px-6 py-16 lg:py-10">
-           
-           {/* left column */}
-            <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-              <div className="max-w-xl">
-                <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-primary"> Business travel</p>
+          <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Discover South Africa</p>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">Find your kind of stay.</h1>
 
-                <h1 className="text-5xl font-medium leading-[0.95] tracking-[-0.04em] text-foreground lg:text-4xl">Travel.<br />
-                  A little more effortless.
-                </h1>
-              </div>
-
-              {/* Right Column */}
-              <div className="max-w-md lg:justify-self-end">
-                <p className="text-sm leading-6 text-muted-foreground"> Find comfortable stays for business trips, short breaks and everything in between.
-                </p>
-              </div>
-            </div>
+            <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
+              From city stays to quiet escapes, discover somewhere
+              you’ll love coming back to.
+            </p>
+          </div>
 
             {/* Search widget */}
             <div className="mt-10">

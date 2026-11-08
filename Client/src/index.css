@@ -149,3 +149,35 @@
     @apply font-sans;
     }
 }
+
+/* Hotel map price markers */
+.hotel-price-marker {
+  background: transparent;
+  border: 0;
+}
+
+.hotel-price-label {
+  display: flex;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 15%);
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+.hotel-price-marker:hover .hotel-price-label,
+.hotel-price-marker:focus-visible .hotel-price-label {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
