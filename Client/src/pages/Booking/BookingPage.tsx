@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { setCheckIn, setCheckOut, setGuests, setRooms, } from "@/features/bookings/bookingSlice"
 import { useGetHotelBySlugQuery } from "@/services/hotelApi"
@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input"
 import { useCreateBookingMutation } from "@/features/bookings/bookingApi"
 import { useAuth0 } from "@auth0/auth0-react"
 import { toast } from "sonner"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger, } from "@/components/ui/popover"
 
 
 function BookingPage() {
@@ -64,6 +67,13 @@ function BookingPage() {
   const roomsAreAvailable = selectedRoom ? booking.rooms <= selectedRoom.quantity: false // Check whether enough rooms are available
   const bookingIsValid = selectedRoom && datesAreValid && roomsAreAvailable && booking.guests > 0 && booking.rooms > 0 // Basic validation before we allow the booking
   
+  const [datesOpen, setDatesOpen] = useState(false)
+
+  const selectedDates = { from: booking.checkIn ? new Date(`${booking.checkIn}T00:00:00`) : undefined, to: booking.checkOut ? new Date(`${booking.checkOut}T00:00:00`)  : undefined, }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
    // Loading hotel/room information
    if (isLoading) {
     return (
@@ -206,42 +216,118 @@ function BookingPage() {
 
              <CardContent className="space-y-6">
               {/* Dates */}
-              <div className="grid gap-4 sm:grid-cols-2">
+             {/* Check-in and check-out calendar */}
+<div>
+  <p className="mb-2 text-sm font-medium">
+    Your dates
+  </p>
 
-                {/* Check-in */}
-                <div>
-                  <label
-                        htmlFor="checkIn"
-                        className="mb-2 block text-sm font-medium">
-                    Check-in
-                  </label>
+  <Popover open={datesOpen} onOpenChange={setDatesOpen}>
+    <PopoverTrigger
+      render={
+        <button
+          type="button"
+          aria-label="Choose check-in and check-out dates"
+          className="grid w-full grid-cols-2 overflow-hidden rounded-xl border border-input bg-background text-left transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        />
+      }
+    >
+      <span className="border-r border-input px-4 py-4">
+        <span className="block text-xs font-semibold">
+          Check-in
+        </span>
 
-                  <Input
-                        id="checkIn"
-                        type="date"
-                        value={booking.checkIn}
-                        onChange={(event) =>
-                         dispatch(
-                          setCheckIn(event.target.value))} />
-                </div>
+        <span className="mt-2 block text-sm text-muted-foreground">
+          {selectedDates.from
+            ? format(selectedDates.from, "dd MMM yyyy")
+            : "Add date"}
+        </span>
+      </span>
 
+      <span className="px-4 py-4">
+        <span className="block text-xs font-semibold">
+          Check-out
+        </span>
 
-                {/* Check-out */}
-                <div>
-                  <label
-                        htmlFor="checkOut"
-                        className="mb-2 block text-sm font-medium">Check-out</label>
+        <span className="mt-2 block text-sm text-muted-foreground">
+          {selectedDates.to
+            ? format(selectedDates.to, "dd MMM yyyy")
+            : "Add date"}
+        </span>
+      </span>
+    </PopoverTrigger>
 
-                  <Input
-                        id="checkOut"
-                        type="date"
-                        value={booking.checkOut}
-                        min={booking.checkIn || undefined}
-                        onChange={(event) =>
-                         dispatch(
-                              setCheckOut(event.target.value))} />
-                </div>
-              </div>
+    <PopoverContent
+      align="start"
+      sideOffset={10}
+      className="max-h-[75dvh] w-auto max-w-[calc(100vw-2rem)] overflow-auto rounded-2xl border-border p-4 shadow-xl"
+    >
+      <div className="mb-4 px-2">
+        <h2 className="text-lg font-semibold">
+          Choose your stay dates
+        </h2>
+
+        <p className="mt-1 text-sm text-muted-foreground">
+          Select check-in first, then check-out.
+        </p>
+      </div>
+
+      <Calendar
+        mode="range"
+        numberOfMonths={1}
+        defaultMonth={selectedDates.from ?? today}
+        selected={selectedDates}
+        min={1}
+        disabled={{ before: today }}
+        onSelect={(range) => {
+          dispatch(
+            setCheckIn(
+              range?.from
+                ? format(range.from, "yyyy-MM-dd")
+                : ""
+            )
+          )
+
+          dispatch(
+            setCheckOut(
+              range?.to
+                ? format(range.to, "yyyy-MM-dd")
+                : ""
+            )
+          )
+        }}
+        className="bg-transparent p-0"
+      />
+
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-full"
+          onClick={() => {
+            dispatch(setCheckIn(""))
+            dispatch(setCheckOut(""))
+          }}
+        >
+          Clear dates
+        </Button>
+
+        <Button
+          type="button"
+          disabled={
+            !booking.checkIn ||
+            !booking.checkOut ||
+            booking.checkOut <= booking.checkIn
+          }
+          className="rounded-full px-6"
+          onClick={() => setDatesOpen(false)}
+        >
+          Done
+        </Button>
+      </div>
+    </PopoverContent>
+  </Popover>
+</div>
 
 
               {/* Guests + rooms */}

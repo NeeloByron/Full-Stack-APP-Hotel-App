@@ -12,11 +12,11 @@ import paymentRoutes from "./routes/payment.routes.js"
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4001;
+const PORT = Number(process.env.PORT) || 4001;
 
 app.use(helmet()); // add security-related HTTP headers
 // allow our react frontend to talk to this backend 
-app.use(cors({origin: process.env.NODE_ENV === "production" ? true : "http://localhost:5173",}));
+app.use(cors({origin: ["http://localhost:5173", "https://full-stack-app-hotel-app-lac.vercel.app",],}));
 // allow express to understand JSON data sent in requests
 app.use(express.json());
 
@@ -75,11 +75,9 @@ app.get("/api/protected", validateAccessToken,(_req, res) => {
 )
 
 // starts the server only when running locally 
-if (process.env.NODE_ENV !== "production") { 
-    app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
- });
-}
+    app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
+ })
 
 // export the express app so vercel can run it as a functioon
 export default app;
