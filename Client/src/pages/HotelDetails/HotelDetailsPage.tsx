@@ -46,15 +46,75 @@ function HotelDetailsPage() {
               </div>
             </section>
 
-            {/* Main hotel image */}
-            <section className="mt-10">
-              <div className="aspect-[16/7] overflow-hidden rounded-xl bg-muted">
-                <img
-                     src={hotel.mainImage}
-                     alt={hotel.name}
-                     className="h-full w-full object-cover" />
+           {/* Hotel image gallery */}
+<section className="mt-10">
+  {(() => {
+    // Start with the main hotel image.
+    // Then use any room images that already exist.
+    const galleryImages = [
+      hotel.mainImage,
+
+      ...hotel.rooms
+        .map((room) => room.image)
+        .filter(
+          (image): image is string =>
+            Boolean(image),
+        ),
+    ]
+
+    // Remove duplicate image URLs.
+    const uniqueImages = [
+      ...new Set(galleryImages),
+    ]
+
+    // We only need up to 5 images
+    // for the gallery layout.
+    const images =
+      uniqueImages.slice(0, 5)
+
+    return (
+      <div className="grid gap-2 overflow-hidden rounded-3xl md:h-[480px] md:grid-cols-2">
+        {/* Large main image */}
+        <div className="min-h-[300px] overflow-hidden bg-muted md:h-full">
+          <img
+            src={images[0]}
+            alt={`${hotel.name} main`}
+            className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
+          />
+        </div>
+
+        {/* Smaller images */}
+        <div className="grid grid-cols-2 gap-2">
+          {[1, 2, 3, 4].map(
+            (imageIndex) => {
+              const image =
+                images[imageIndex]
+
+              if (!image) {
+                return (
+                  <div
+                    key={imageIndex}
+                    className="min-h-[150px] bg-muted"
+                  />
+                )
+              }
+
+              return (
+                <div key={image}
+                  className="min-h-[150px] overflow-hidden bg-muted">
+                  <img
+                    src={image}
+                    alt={`${hotel.name} gallery ${imageIndex + 1}`}
+                    className="h-full w-full object-cover transition duration-300 hover:scale-[1.03]"/>
+                   </div>
+                    )
+                  },
+                 )}
               </div>
-            </section>
+             </div>
+              )
+           })()}
+          </section>
 
             {/* Rooms + hotel information */}
             <section className="mt-12 grid gap-10 lg:grid-cols-[1fr_320px]">

@@ -8,6 +8,7 @@ import MyBookingsPage from "@/pages/Booking/MyBookingsPage"
 import ProfilePage from "@/pages/Profile/ProfilePage"
 import HostPage from "@/pages/Host/HostPage"
 import PaymentCallbackPage from "@/pages/Payment/PaymentCallbackPage"
+import AdminListingsPage from "@/pages/Host/AdminListingsPage"
 
 function AppRoutes() {
   return (
@@ -24,7 +25,7 @@ function AppRoutes() {
 
       <Route path="/hosting" element={<HostPage />} />
       <Route path="/hosting/calendar" element={<HostPage />} />
-      <Route path="/hosting/listings" element={<HostPage />} />
+      <Route path="/hosting/listings" element={<AdminListingsPage />} />
       <Route path="/hosting/messages" element={<HostPage />} />
 
     </Routes>
