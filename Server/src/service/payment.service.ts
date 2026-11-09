@@ -29,8 +29,7 @@ type PaystackVerifyResponse = {
   }
 }
 
-export async function initializePayment(
-  input: InitializePaymentInput,) {
+export async function initializePayment(input: InitializePaymentInput,) {
   const { bookingId, userId, email, } = input
 
   // Find the booking and make sure it belongs to the logged-in user.
@@ -80,20 +79,28 @@ export async function initializePayment(
           "application/json",
       },
 
-      body: JSON.stringify({
-        email,
-        amount:
-          amountInCents.toString(),
-        currency: "ZAR",
-        reference,
+     body: JSON.stringify({
+     email,
 
-        // For now we only want bank cards.
-        channels: ["card"],
+     amount:
+     amountInCents.toString(),
 
-        metadata: {
-          bookingId:
-            booking.id,
-          userId,
+     currency: "ZAR",
+
+     reference,
+
+    // Only allow bank card payments for now.
+    channels: ["card"],
+
+    // After payment Paystack sends the user
+    // back to our React application.
+    callback_url: "https://full-stack-app-hotel-app-lac.vercel.app/payment/callback",
+
+     metadata: {
+       bookingId:
+        booking.id,
+
+        userId,
         },
       }),
     },
@@ -128,63 +135,148 @@ export async function initializePayment(
   return result.data
 }
 
-export async function verifyPayment(reference: string) {
-  const secretKey = process.env.PAYSTACK_SECRET_KEY
+export async function verifyPayment(
+  reference: string,
+) {
+  const secretKey =
+    process.env.PAYSTACK_SECRET_KEY
 
   if (!secretKey) {
-    throw new Error("Paystack secret key is missing.")
+    throw new Error(
+      "Paystack secret key is missing.",
+    )
   }
 
-  const payment = await prisma.payment.findUnique({
-    where: { reference },
-    include: { booking: true },
-  })
+  // Find the payment in our database.
+  const payment =
+    await prisma.payment.findUnique({
+      where: {
+        reference,
+      },
+
+      include: {
+        booking: true,
+      },
+    })
 
   if (!payment) {
-    throw new Error("Payment record not found.")
+    throw new Error(
+      "Payment record not found.",
+    )
   }
 
+  // IMPORTANT:
+  // Never turn a cancelled booking
+  // back into CONFIRMED.
+  if (
+    payment.booking.status ===
+    "CANCELLED"
+  ) {
+    throw new Error(
+      "This booking has been cancelled and cannot be confirmed.",
+    )
+  }
+
+  // Ask Paystack what really happened.
   const response = await fetch(
     `https://api.paystack.co/transaction/verify/${reference}`,
     {
       method: "GET",
-      headers: { Authorization: `Bearer ${secretKey}` },
+
+      headers: {
+        Authorization:
+          `Bearer ${secretKey}`,
+      },
     },
   )
 
-  const result = (await response.json()) as PaystackVerifyResponse
+  const result =
+    (await response.json()) as PaystackVerifyResponse
 
-  if (!response.ok || !result.status) {
-    throw new Error(result.message || "Could not verify payment.")
+  if (
+    !response.ok ||
+    !result.status
+  ) {
+    throw new Error(
+      result.message ||
+        "Could not verify payment.",
+    )
   }
 
-  const expectedAmount = Math.round(Number(payment.amount) * 100)
+  // Paystack sends amounts in cents.
+  const expectedAmount =
+    Math.round(
+      Number(payment.amount) * 100,
+    )
 
-  if (result.data.amount !== expectedAmount) {
-    throw new Error("Payment amount does not match booking total.")
+  // Make sure the customer paid
+  // the correct amount.
+  if (
+    result.data.amount !==
+    expectedAmount
+  ) {
+    throw new Error(
+      "Payment amount does not match booking total.",
+    )
   }
 
-  if (result.data.currency !== "ZAR") {
-    throw new Error("Payment currency is invalid.")
+  // We only accept ZAR.
+  if (
+    result.data.currency !== "ZAR"
+  ) {
+    throw new Error(
+      "Payment currency is invalid.",
+    )
   }
 
-  if (result.data.status !== "success") {
-    throw new Error("Payment has not been completed successfully.")
+  // The payment must actually be successful.
+  if (
+    result.data.status !==
+    "success"
+  ) {
+    throw new Error(
+      "Payment has not been completed successfully.",
+    )
   }
 
-  const updatedPayment = await prisma.$transaction(async (tx) => {
-    const confirmedPayment = await tx.payment.update({
-      where: { id: payment.id },
-      data: { status: "SUCCESS" },
-    })
+  // If we've already processed this payment,
+  // simply return it.
+  if (
+    payment.status === "SUCCESS" &&
+    payment.booking.status ===
+      "CONFIRMED"
+  ) {
+    return payment
+  }
 
-    await tx.booking.update({
-      where: { id: payment.bookingId },
-      data: { status: "CONFIRMED" },
-    })
+  // Update the Payment and Booking together.
+  const updatedPayment =
+    await prisma.$transaction(
+      async (tx) => {
+        const confirmedPayment =
+          await tx.payment.update({
+            where: {
+              id: payment.id,
+            },
 
-    return confirmedPayment
-  })
+            data: {
+              status: "SUCCESS",
+            },
+          })
+
+        await tx.booking.update({
+          where: {
+            id: payment.bookingId,
+          },
+
+          data: {
+            status: "CONFIRMED",
+          },
+        })
+
+        return confirmedPayment
+      },
+    )
 
   return updatedPayment
 }
