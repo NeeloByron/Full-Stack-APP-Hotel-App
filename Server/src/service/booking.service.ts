@@ -58,6 +58,12 @@ export async function createBooking(input: CreateBookingInput) {
     throw new Error("Room type not found.")
   }
 
+  if (!roomType.hotel.active) {
+  throw new Error(
+    "This hotel is not currently accepting new bookings."
+  )
+}
+
   // Makes sure the room belongs to the hotel sent by the frontend.
   if (roomType.hotelId !== hotelId) {
     throw new Error(

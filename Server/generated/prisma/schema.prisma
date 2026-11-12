@@ -15,16 +15,16 @@ model Booking {
   checkOut     DateTime
   guests       Int
   rooms        Int
-  userId       Int?
-  payments     Payment[]
   nightlyPrice Decimal       @db.Decimal(10, 2)
   totalPrice   Decimal       @db.Decimal(10, 2)
   status       BookingStatus @default(PENDING)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  userId       Int?
   hotel        Hotel         @relation(fields: [hotelId], references: [id])
   roomType     RoomType      @relation(fields: [roomTypeId], references: [id])
   user         User?         @relation(fields: [userId], references: [id])
+  payments     Payment[]
 
   @@index([userId])
   @@index([hotelId])
@@ -74,6 +74,32 @@ model RoomType {
   hotel       Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
 }
 
+model Payment {
+  id        Int           @id @default(autoincrement())
+  bookingId Int
+  amount    Decimal       @db.Decimal(10, 2)
+  currency  String        @default("ZAR")
+  reference String        @unique
+  status    PaymentStatus @default(PENDING)
+  provider  String        @default("PAYSTACK")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  booking   Booking       @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  auth0Id   String    @unique
+  email     String?   @unique
+  name      String?
+  role      UserRole  @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+}
+
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -91,45 +117,4 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
-}
-
-model Payment {
-  id Int @id @default(autoincrement())
-
-  bookingId Int
-  booking   Booking @relation(fields: [bookingId], references: [id])
-
-  // Amount paid in South African Rand.
-  amount Decimal @db.Decimal(10, 2)
-
-  currency String @default("ZAR")
-
-  // Paystack gives every payment a unique reference.
-  reference String @unique
-
-  status PaymentStatus @default(PENDING)
-
-  provider String @default("PAYSTACK")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([bookingId])
-}
-
-model User {
-  id Int @id @default(autoincrement())
-
-  // Auth0 unique user ID
-  auth0Id String @unique
-
-  email String? @unique
-  name  String?
-
-  role UserRole @default(USER)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  bookings Booking[]
 }

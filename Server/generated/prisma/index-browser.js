@@ -128,12 +128,12 @@ exports.Prisma.BookingScalarFieldEnum = {
   checkOut: 'checkOut',
   guests: 'guests',
   rooms: 'rooms',
-  userId: 'userId',
   nightlyPrice: 'nightlyPrice',
   totalPrice: 'totalPrice',
   status: 'status',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  userId: 'userId'
 };
 
 exports.Prisma.ConnectionTestScalarFieldEnum = {
