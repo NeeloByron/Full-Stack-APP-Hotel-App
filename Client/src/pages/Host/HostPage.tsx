@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import type { Hotel } from "@/services/hotelApi"
+import { toast } from "sonner"
+
 
 function HostPage() {
   const { pathname } = useLocation()
@@ -160,7 +162,7 @@ function HostListings() {
 
   const [hotels, setHotels] = useState<Hotel[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [loadFailed, setLoadFailed] = useState(false)
   const [reloadCount, setReloadCount] = useState(0)
 
   useEffect(() => {
@@ -169,87 +171,162 @@ function HostListings() {
     const controller = new AbortController()
 
     async function loadHotels() {
-      try {
-        const accessToken =
-          await getAccessTokenSilently()
+  try {
+    const accessToken = await getAccessTokenSilently()
 
-        if (!accessToken) {
-          throw new Error("Please log in again.",)
-        }
-
-        const response = await fetch("/api/hotels/admin/all",
-          {
-            headers: {
-              Authorization:`Bearer ${accessToken}`,
-            },
-
-            signal: controller.signal,
-          },
-        )
-
-        const result = await response.json()
-
-        if (!response.ok || !result.success
-        ) {
-          throw new Error(result.message ??"Could not load your hotels.",)
-        }
-
-        if (!Array.isArray(result.data)) {
-          throw new Error("The server returned an invalid hotel list.",)
-        }
-
-        if (active) {
-          setHotels(result.data)
-        }
-      } catch (error) {
-        if (active) {
-          setError(
-            error instanceof Error
-              ? error.message
-              : "Could not load your hotels.",
-          )
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
+    if (!accessToken) { throw new Error( "Please log in again.", )
     }
 
-    void loadHotels()
+    const response = await fetch( "/api/hotels/admin/all", {
+        headers: {
+          Authorization:
+            `Bearer ${accessToken}`,
+        },
+
+        signal: controller.signal,
+      },
+    )
+
+    const result =
+      await response.json()
+
+    if (
+      !response.ok ||
+      !result.success
+    ) {
+      throw new Error(
+        result.message ?? "Could not load your hotels.",
+      )
+    }
+
+    if (!Array.isArray(result.data)) {
+      throw new Error( "The server returned an invalid hotel list.", )
+    }
+
+    if (active) {
+      setHotels(result.data)
+      setLoadFailed(false)
+    }
+  } catch (error) {
+    if (active) {
+      const message = error instanceof Error ? error.message : "Could not load your hotels."
+      setLoadFailed(true)
+
+       toast.error( "Could not load hotel listings",
+        {
+          description: message,
+        },)
+     }
+      } finally {
+       if (active) {
+        setLoading(false)
+       }
+     }
+   }
+
+    void loadHotels() 
 
     return () => {
-      active = false
-      controller.abort()
+                  active = false 
+                  controller.abort()
     }
   }, [getAccessTokenSilently, reloadCount,])
 
   function reloadHotels() {
     setLoading(true)
-    setError("")
+    setLoadFailed(false)
 
     setReloadCount(
       (count) => count + 1,
     )
   }
 
-  if (loading) {
-    return (
-      <p role="status" className="mt-10 text-sm text-muted-foreground">Loading your hotel listings…</p>
-    )
-  }
+  async function togglePublishStatus(hotel: Hotel) {
+  try {
+    const accessToken = await getAccessTokenSilently()
 
-  if (error) {
-    return (
-      <section className="mt-10 rounded-2xl border border-border p-6">
-        <p role="alert" className="text-sm text-destructive">{error}</p>
-        <Button
-          variant="outline"
-          className="mt-4 rounded-full"
-          onClick={reloadHotels}>Try again</Button>
-      </section>
+    if (!accessToken) {
+      throw new Error("Please log in again.")
+    }
+
+    const response = await fetch(
+      `/api/hotels/${hotel.id}/publish`,
+      {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+
+        body: JSON.stringify({
+          active: !hotel.active,
+        }),
+      },
+    )
+
+    const result = await response.json()
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message ??
+          "Could not update hotel status.",
+      )
+    }
+
+    setHotels((currentHotels) =>
+      currentHotels.map((currentHotel) =>
+        currentHotel.id === hotel.id
+          ? {
+              ...currentHotel,
+              active: result.data.active,
+            }
+          : currentHotel,
+      ),
+    )
+
+    toast.success(
+      result.data.active
+        ? "Hotel published"
+        : "Hotel unpublished",
+      {
+        description: result.data.active
+          ? `${hotel.name} is now visible to guests.`
+          : `${hotel.name} is now hidden from guests.`,
+      },
+    )
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Could not update hotel status."
+
+    toast.error(
+      "Could not update hotel",
+      {
+        description: message,
+      },
     )
   }
+}
+
+if (loading) {
+  return (
+    <p role="status" className="mt-10 text-sm text-muted-foreground"> Loading your hotel listings… </p>
+  )
+}
+
+if (loadFailed) {
+  return (
+    <section className="mt-10 text-center">
+      <Button
+               variant="outline"
+               className="rounded-full"
+               onClick={reloadHotels}> Try loading listings again
+      </Button>
+    </section>
+  )
+}
 
   return (
     <section className="mt-10">
@@ -274,8 +351,7 @@ function HostListings() {
           {hotels.map((hotel) => (
             <Card
               key={hotel.id}
-              className="overflow-hidden rounded-2xl p-0"
-            >
+              className="overflow-hidden rounded-2xl p-0">
               <div className="relative">
                 <img
                   src={hotel.mainImage}
@@ -293,14 +369,22 @@ function HostListings() {
                 </span>
               </div>
 
-              <CardContent className="space-y-3 p-5">
-                <h3 className="text-lg font-semibold">{hotel.name}</h3>
-                <p className="text-sm text-muted-foreground">{hotel.city},{" "}{hotel.province}</p>
-                
-                <div className="border-t border-border pt-3 text-sm">
-                  <p>{hotel.rooms.length}{" "} room types</p>
-                  <p className="mt-1 text-muted-foreground">{hotel.rooms.reduce((total, room,) => total + room.quantity, 0,)}{" "}rooms in total </p>
-                </div>
+             <CardContent className="space-y-3 p-5">
+               <h3 className="text-lg font-semibold"> {hotel.name} </h3>
+               <p className="text-sm text-muted-foreground">{hotel.city},{" "}{hotel.province} </p>
+
+               <div className="border-t border-border pt-3 text-sm">
+                  <p> {hotel.rooms.length}{" "} room types </p>
+                  <p className="mt-1 text-muted-foreground">{hotel.rooms.reduce((total, room) => total + room.quantity, 0,)}{" "}rooms in total</p>
+               </div>
+
+            <div className="flex gap-3 pt-2">
+             <Button
+                 variant={hotel.active? "outline": "default"}
+                 className="rounded-full"
+                  onClick={() => togglePublishStatus(hotel) } >
+                      {hotel.active ? "Unpublish" : "Publish"} </Button>
+                 </div>
               </CardContent>
             </Card>
           ))}
